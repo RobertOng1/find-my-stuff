@@ -1,16 +1,28 @@
-# find_my_stuff
+# find-my-stuff
 
-A new Flutter project.
+## App Name and Short Description
+**FindMyStuff** – Smart Lost &amp; Found Assistant.  
+A Flutter project to help people report, search, and return lost items.
 
-## Getting Started
+## Team Members
+- Rayza Indafri Yahya (231402005)  
+- Robert Ong (231402023)  
+- M. Farras Prasetya (231402047)  
+- Nayla Az Zahra (231402050)  
+- Louis Claudio (231402068)
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Features
+1. **Home Screen**  
+   A main page that provides two options:  
+   - Report Lost Item: to submit a new lost item report.
+   - Find Lost Item: to browse and search existing reports.  
+2. **Report Lost Item Form**  
+   Allows users to fill in details such as item name, description, location, and contact information.  
+3. **List of Reported Items**  
+   Displays a list of all reported lost items with the details such as item name, description, location, and contact information.  
+   Users can tap on any item to view complete information.  
+4. **Search Function**  
+   A simple search bar to filter reported items by name or location.  
+   Helps users quickly find specific lost items from the list.
+   
+## Project Description
