@@ -1,4 +1,4 @@
-# FindMyStuff
+# find-my-stuff
 
 ## App Name and Short Description
 **FindMyStuff** – Smart Lost &amp; Found Assistant.  
