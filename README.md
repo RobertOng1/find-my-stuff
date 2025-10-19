@@ -32,6 +32,7 @@ It connects people who lose their belongings with those who find them, making it
 - Firebase Authentication  
 - Cloud Firestore  
 - Firebase Storage
+
 **Minimum Requirements:**
 - Dart SDK: 3.9.2 or higher
 - Flutter SDK: 3.35.3 or higher 
