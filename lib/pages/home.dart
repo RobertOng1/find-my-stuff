@@ -25,89 +25,94 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: appBar(),
       backgroundColor: Colors.white,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      body: ListView(
         children: [
           _searchField(),
           SizedBox(height: 40),
           _categoriesSection(),
           SizedBox(height: 40),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 20), 
-                child: Text('Lost Items', 
-                style: TextStyle(
-                  fontSize: 18, 
-                  color: Colors.black,
-                  fontWeight: FontWeight.w600)
-                )
-              ),
-              SizedBox(height: 15,),
-              Container(
-                height: 315,
-                child: ListView.separated(
-                  itemBuilder: (context, index) {
-                    return Container(
-                      width: 210,
-                      decoration: BoxDecoration(
-                        color: lostItems[index].isFound ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        children: [
-                          Container(
-                            width: 210,
-                            height: 150,
-                            child: Image.asset(lostItems[index].iconPath,
-                            fit: BoxFit.cover)
+          _lostItemsSection()
+        ],
+      )
+    );
+  }
+
+  Column _lostItemsSection() {
+    return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 20), 
+              child: Text('Lost Items', 
+              style: TextStyle(
+                fontSize: 18, 
+                color: Colors.black,
+                fontWeight: FontWeight.w600)
+              )
+            ),
+            SizedBox(height: 15,),
+            Container(
+              height: 315,
+              child: ListView.separated(
+                itemBuilder: (context, index) {
+                  return Container(
+                    width: 210,
+                    decoration: BoxDecoration(
+                      color: lostItems[index].isFound ? Colors.green.withOpacity(0.3) : Colors.red.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 210,
+                          height: 150,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                            ),
+                            child: Image.asset(
+                              lostItems[index].iconPath,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                            ),
                           ),
-                          SizedBox(height: 15),
-                          Column(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.only(left: 15, right: 15),
-                                child: 
-                                  Text(
-                                  lostItems[index].name,
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500
-                                  ),
-                                  ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.only(left: 15, right: 15),
-                                child:
-                                  Text(
-                                  lostItems[index].description,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                  ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.only(left: 15, right: 15),
-                                child:
-                                  Text(
-                                  lostItems[index].locationLost,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                  ),
+                        ),
+                        SizedBox(height: 15),
+                        Column(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.only(left: 15, right: 15),
+                              child: 
+                                Text(
+                                lostItems[index].name,
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500
                                 ),
-                              ),
-                              Text(
-                                'Date Lost: ' + lostItems[index].dateLost,
+                                ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.only(left: 15, right: 15),
+                              child:
+                                Text(
+                                lostItems[index].description,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.only(left: 15, right: 15),
+                              child:
+                                Text(
+                                lostItems[index].locationLost,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -116,39 +121,58 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
-                              SizedBox(height: 15),
-                              Container(
-                                height: 35,
-                                width: 150,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Color(0xff9DCEFF), 
-                                      Color(0xff92A3FD)
-                                    ]
+                            ),
+                            Text(
+                              'Date Lost: ' + lostItems[index].dateLost,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            SizedBox(height: 15),
+                            Container(
+                              height: 35,
+                              width: 150,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    lostItems[index].isFound ? Colors.transparent : Color(0xff9DCEFF),
+                                    lostItems[index].isFound ? Colors.transparent : Color(0xff92A3FD),
+                                  ]
+                                ),
+                                borderRadius: BorderRadius.circular(50)
+                              ),
+                              child: Center(
+                                child: Text(
+                                  lostItems[index].isFound ? 'Found' : 'View Details',
+                                  style: TextStyle(
+                                    color: lostItems[index].isFound ? Colors.black : Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600
+                                  ),
                                 ),
                               )
-                              )
-                            ],
-                          ),
-                        ]
-                      )
-                    );
-                  },
-                  scrollDirection: Axis.horizontal,
-                  separatorBuilder: (context, index) => SizedBox(width: 25),
-                  itemCount: lostItems.length,
-                  padding: EdgeInsets.only(
-                    left: 20,
-                    right: 20
-                  ),
-              ),
-              )
-            ],
+                            )
+                          ],
+                        ),
+                      ]
+                    )
+                  );
+                },
+                scrollDirection: Axis.horizontal,
+                separatorBuilder: (context, index) => SizedBox(width: 25),
+                itemCount: lostItems.length,
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20
+                ),
+            ),
             )
-        ],
-      )
-    );
+          ],
+          );
   }
 
   Column _categoriesSection() {
