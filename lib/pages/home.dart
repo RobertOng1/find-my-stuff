@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     _getInitializationInfo();
     return Scaffold(
-      appBar: appBar(),
+      // appBar: appBar(),
       backgroundColor: Colors.white,
       body: ListView(
         children: [

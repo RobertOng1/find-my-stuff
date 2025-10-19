@@ -30,9 +30,10 @@ class _MainNavbarState extends State<MainNavbar> {
 
 
   static final List<Widget> _pages = <Widget>[
-    HomePage(), 
+    HomePage(),
     Center(child: Text('Report Lost Item')),
     Center(child: Text('Find Lost Item')),
+    Center(child: Text('Profile')),
   ];
 
   void _onItemTapped(int index) {
@@ -46,6 +47,7 @@ class _MainNavbarState extends State<MainNavbar> {
     return Scaffold(
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
@@ -56,8 +58,12 @@ class _MainNavbarState extends State<MainNavbar> {
             label: 'Report',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Find',
+            icon: Icon(Icons.book),
+            label: 'My Report',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
         currentIndex: _selectedIndex,
