@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "217457670566",
+    "project_id": "tubes-pemob-3b373",
+    "storage_bucket": "tubes-pemob-3b373.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:217457670566:android:a421354444f975528e3767",
+        "android_client_info": {
+          "package_name": "com.company.pemob"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "217457670566-5msn1cqr9gdg0ufjb1g2985aogmg538o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.company.pemob",
+            "certificate_hash": "831bf7a1541f829579b5ebb6145edd98c31ced2d"
+          }
+        },
+        {
+          "client_id": "217457670566-63kd1kbhpc0bb3150lpc7tnaqh2vhb7i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDq90nid5u2Z8oRGcCvlREV3he6QGEBQPg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "217457670566-63kd1kbhpc0bb3150lpc7tnaqh2vhb7i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:217457670566:android:5145038e4a8c87558e3767",
+        "android_client_info": {
+          "package_name": "com.example.find_my_stuff"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "217457670566-63kd1kbhpc0bb3150lpc7tnaqh2vhb7i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDq90nid5u2Z8oRGcCvlREV3he6QGEBQPg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "217457670566-63kd1kbhpc0bb3150lpc7tnaqh2vhb7i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
