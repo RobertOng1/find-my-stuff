@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
-import 'reward_screen.dart';
+import '../reward/reward_screen.dart';
 import 'widgets/claim_rejected_dialog.dart';
 
 import '../../core/models/models.dart';
