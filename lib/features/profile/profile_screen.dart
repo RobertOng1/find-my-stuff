@@ -1,18 +1,88 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/services/firestore_service.dart';
+import '../../core/models/models.dart';
 import '../auth/login_screen.dart';
 
 import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
 import 'badges_screen.dart';
-import '../claim/verification_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final AuthService _authService = AuthService();
+  final FirestoreService _firestoreService = FirestoreService();
+  
+  UserModel? _currentUser;
+  int _lostCount = 0;
+  int _foundCount = 0;
+  int _returnedCount = 0; // Logic for this might need refinement based on 'resolved' items
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileData();
+  }
+
+  Future<void> _loadProfileData() async {
+    setState(() => _isLoading = true);
+    
+    // 1. Get User Info
+    final user = await _authService.getCurrentUserModel();
+    
+    if (user != null) {
+      // 2. Get Stats
+      final lost = await _firestoreService.getUserItemCount(user.uid, 'LOST');
+      final found = await _firestoreService.getUserItemCount(user.uid, 'FOUND');
+      
+      // For "Returned", we might count items with status 'RESOLVED' that this user found?
+      // Or items this user lost that were 'RESOLVED'?
+      // For now, let's just use a placeholder or potentially query resolved claimed items.
+      // Let's assume 'Returned' means items I found and returned to owner.
+      // Complex query, maybe skip for now or use mock.
+      // Let's rely on Found items count that are resolved contextually if possible, 
+      // but for V1 we can keep it 0 or mock, OR count 'FOUND' items that are 'RESOLVED'.
+      // Let's try to query 'FOUND' items with status 'RESOLVED'.
+      // _firestoreService doesn't have that specific query yet.
+      // I'll leave it as a TODO or just show foundCount for now.
+      
+      if (mounted) {
+        setState(() {
+          _currentUser = user;
+          _lostCount = lost;
+          _foundCount = found;
+          _isLoading = false;
+        });
+      }
+    } else {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF9F9F9),
+        body: Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+      );
+    }
+
+    // Default or Empty User
+    final displayName = _currentUser?.displayName ?? 'User';
+    final email = _currentUser?.email ?? 'No Email';
+    final photoUrl = _currentUser?.photoUrl ?? '';
+    final role = 'Member'; // Static for now
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
       body: SingleChildScrollView(
@@ -26,7 +96,7 @@ class ProfileScreen extends StatelessWidget {
                 CustomPaint(
                   painter: CurvedHeaderPainter(),
                   child: Container(
-                    height: 260, // Taller to accommodate curve
+                    height: 260,
                     width: double.infinity,
                     padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
                     alignment: Alignment.topCenter,
@@ -36,7 +106,7 @@ class ProfileScreen extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
                           onPressed: () {
-                            // Handled by MainScreen or Navigator
+                            // Handled by default navigation if pushed, or MainScreen tab switch
                           },
                         ),
                         const Text(
@@ -55,7 +125,9 @@ class ProfileScreen extends StatelessWidget {
                           ),
                           child: IconButton(
                             icon: const Icon(Icons.settings_outlined, color: Colors.white),
-                            onPressed: () {},
+                            onPressed: () {
+                              // Optional: Navigate to settings
+                            },
                           ),
                         ),
                       ],
@@ -65,7 +137,7 @@ class ProfileScreen extends StatelessWidget {
 
                 // Glass Profile Card
                 Positioned(
-                  top: 130, // Adjusted top
+                  top: 130,
                   left: 24,
                   right: 24,
                   child: Container(
@@ -93,17 +165,19 @@ class ProfileScreen extends StatelessWidget {
                               end: Alignment.bottomRight,
                             ),
                           ),
-                          child: const CircleAvatar(
+                          child: CircleAvatar(
                             radius: 42,
-                            backgroundImage: AssetImage('assets/images/logo.png'), 
+                            backgroundImage: photoUrl.isNotEmpty 
+                                ? NetworkImage(photoUrl) 
+                                : const AssetImage('assets/images/logo.png') as ImageProvider,
                             backgroundColor: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          'Farras Syahputra',
-                          style: TextStyle(
-                            fontSize: 20, // Larger
+                        Text(
+                          displayName,
+                          style: const TextStyle(
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textDark,
                           ),
@@ -115,9 +189,9 @@ class ProfileScreen extends StatelessWidget {
                             color: AppColors.primaryLight.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text(
-                            'Mahasiswa Teknik Industri',
-                            style: TextStyle(
+                          child: Text(
+                            role,
+                            style: const TextStyle(
                               fontSize: 12,
                               color: AppColors.primaryBlue,
                               fontWeight: FontWeight.w600,
@@ -127,9 +201,10 @@ class ProfileScreen extends StatelessWidget {
                         const SizedBox(height: 20),
                         const Divider(color: Color(0xFFF0F0F0), thickness: 1),
                         const SizedBox(height: 16),
-                        _buildInfoRow(Icons.email_rounded, 'Email', 'rassonly23@students.usu.ac.id'),
-                        const SizedBox(height: 12),
-                        _buildInfoRow(Icons.phone_rounded, 'Phone', '+62 857-5849-0242'),
+                        _buildInfoRow(Icons.email_rounded, 'Email', email),
+                        // Phone is not in UserModel yet, keep placeholder or remove
+                        // const SizedBox(height: 12),
+                        // _buildInfoRow(Icons.phone_rounded, 'Phone', '+62 857-5849-0242'),
                       ],
                     ),
                   ),
@@ -145,18 +220,18 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 children: [
-                  _buildGlassStatCard('2', 'Lost Item', const Color(0xFFFFA000)),
+                  _buildGlassStatCard(_lostCount.toString(), 'Lost Item', const Color(0xFFFFA000)),
                   const SizedBox(width: 12),
-                  _buildGlassStatCard('1', 'Found Item', AppColors.successGreen),
+                  _buildGlassStatCard(_foundCount.toString(), 'Found Item', AppColors.successGreen),
                   const SizedBox(width: 12),
-                  _buildGlassStatCard('3', 'Returned', AppColors.primaryBlue),
+                  _buildGlassStatCard(_returnedCount.toString(), 'Returned', AppColors.primaryBlue),
                 ],
               ),
             ),
 
             const SizedBox(height: 24),
 
-            // Badges Section
+            // Badges Section (Static for now)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -214,103 +289,6 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // My Active Posts Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.list_alt, color: AppColors.primaryBlue),
-                      SizedBox(width: 8),
-                      Text(
-                        'My Active Posts',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Mock Active Post Item
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFEEEEEE)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 5,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(8),
-                            image: const DecorationImage(
-                              image: AssetImage('assets/images/logo.png'),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Blue Backpack',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textDark,
-                                ),
-                              ),
-                              Text(
-                                'Status: Pending Claim',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.orange,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const VerificationScreen()),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            minimumSize: const Size(0, 32),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          ),
-                          child: const Text('Review', style: TextStyle(fontSize: 12)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
             // Account Settings
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -349,48 +327,8 @@ class ProfileScreen extends StatelessWidget {
                         (route) => false,
                       );
                     }
-                  }),
-                  const SizedBox(height: 24),
-                  
-                  // DEV: Simulation Section
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.shade200),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Developer Tools',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const VerificationScreen()),
-                              );
-                            },
-                            icon: const Icon(Icons.bug_report, size: 16),
-                            label: const Text('Simulate Incoming Claim'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              foregroundColor: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  }, isWarning: true),
+                  const SizedBox(height: 64)
                 ],
               ),
             ),
@@ -401,6 +339,7 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
+
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
@@ -470,7 +409,7 @@ class ProfileScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: bgColor.withOpacity(0.5), // Glassy feel
+        color: bgColor.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: iconColor.withOpacity(0.1)),
       ),
@@ -506,7 +445,11 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSettingsButton(BuildContext context, String title, IconData icon, VoidCallback onTap) {
+  Widget _buildSettingsButton(BuildContext context, String title, IconData icon, VoidCallback onTap, {bool isWarning = false}) {
+    final color = isWarning ? AppColors.errorRed : AppColors.textDark;
+    final iconColor = isWarning ? AppColors.errorRed : AppColors.primaryBlue;
+    final bgColor = isWarning ? AppColors.errorRed.withOpacity(0.1) : AppColors.primaryLight.withOpacity(0.1);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -528,22 +471,22 @@ class ProfileScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.primaryLight.withOpacity(0.1),
+                color: bgColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 18, color: AppColors.primaryBlue),
+              child: Icon(icon, size: 18, color: iconColor),
             ),
             const SizedBox(width: 16),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textDark,
+                color: color,
               ),
             ),
             const Spacer(),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textGrey),
+            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: isWarning ? AppColors.errorRed : AppColors.textGrey),
           ],
         ),
       ),
@@ -563,13 +506,10 @@ class CurvedHeaderPainter extends CustomPainter {
 
     final path = Path();
     path.lineTo(0, size.height - 60);
-    
-    // Create a smooth quadratic bezier curve
     path.quadraticBezierTo(
       size.width / 2, size.height, 
       size.width, size.height - 60
     );
-    
     path.lineTo(size.width, 0);
     path.close();
 

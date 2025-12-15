@@ -103,4 +103,32 @@ class FirestoreService {
       return null;
     }
   }
+  // Profile Stats
+  Future<int> getUserItemCount(String userId, String type) async {
+    try {
+      final snapshot = await _db
+          .collection('posts')
+          .where('userId', isEqualTo: userId)
+          .where('type', isEqualTo: type)
+          .count()
+          .get();
+      return snapshot.count ?? 0;
+    } catch (e) {
+      print('Error getting $type count: $e');
+      return 0;
+    }
+  }
+
+  Stream<List<ItemModel>> getUserActiveItems(String userId) {
+    return _db
+        .collection('posts')
+        .where('userId', isEqualTo: userId)
+        .where('status', isEqualTo: 'OPEN') // Only active items
+        .orderBy('date', descending: true)
+        .limit(5)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ItemModel.fromJson(doc.data(), doc.id))
+            .toList());
+  }
 }
