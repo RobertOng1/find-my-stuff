@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/ui_utils.dart';
 
 class ClaimAcceptedDialog extends StatelessWidget {
   const ClaimAcceptedDialog({super.key});
@@ -73,9 +74,7 @@ class ClaimAcceptedDialog extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Opening chat...')),
-                  );
+                  UiUtils.showModernSnackBar(context, 'Opening chat...');
                 },
                 icon: const Icon(Icons.chat_bubble_outline, size: 18),
                 label: const Text('Send Pickup Details in Chat'),
@@ -95,9 +94,7 @@ class ClaimAcceptedDialog extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Receipt Downloaded')),
-                  );
+                  UiUtils.showModernSnackBar(context, 'Receipt Downloaded');
                 },
                 icon: const Icon(Icons.download_rounded, size: 18),
                 label: const Text('Download Receipt'),

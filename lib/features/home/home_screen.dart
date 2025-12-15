@@ -6,6 +6,7 @@ import '../chat/chat_screen.dart';
 import '../claim/proof_form_screen.dart';
 import 'add_report_screen.dart';
 import '../../core/models/models.dart';
+import '../../widgets/animated_gradient_bg.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -76,131 +77,151 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9), // Light grey background for dashboard
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header & Search
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Lost Item',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Search Bar
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: _isFoundTabActive ? 'Search found items...' : 'Search lost reports...',
-                        hintStyle: const TextStyle(color: AppColors.textGrey),
-                        prefixIcon: const Icon(Icons.search, color: AppColors.textGrey),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, color: AppColors.textGrey),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() {
-                                    _searchQuery = '';
-                                  });
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+      extendBodyBehindAppBar: true, // Allow body to extend behind
+      body: AnimatedGradientBg(
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header & Search
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Find Your Stuff', // More engaging title
+                      style: TextStyle(
+                        fontSize: 28, // Larger
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textDark,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Toggle Switch
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 24),
+                    
+                    // Glass Search Bar
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.8), // Glassy
+                        borderRadius: BorderRadius.circular(20), // Pill shape
+                        border: Border.all(color: Colors.white, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF2D9CDB).withOpacity(0.1), // Blue-ish shadow
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (value) => setState(() => _searchQuery = value),
+                        decoration: InputDecoration(
+                          hintText: _isFoundTabActive ? 'Search found items...' : 'Search lost reports...',
+                          hintStyle: TextStyle(color: AppColors.textGrey.withOpacity(0.7)),
+                          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primaryBlue),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, color: AppColors.textGrey),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                )
+                              : null,
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                        ),
+                      ),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _isFoundTabActive = true),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: _isFoundTabActive ? Colors.white : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: _isFoundTabActive
-                                    ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)]
-                                    : null,
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                'Found Nearby',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: _isFoundTabActive ? AppColors.primaryBlue : AppColors.textGrey,
+
+                    const SizedBox(height: 24),
+
+                    // Modern Toggle Switch
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withOpacity(0.5)),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _isFoundTabActive = true),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  gradient: _isFoundTabActive 
+                                      ? const LinearGradient(colors: [AppColors.primaryBlue, AppColors.primaryLight])
+                                      : null,
+                                  color: _isFoundTabActive ? null : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: _isFoundTabActive
+                                      ? [
+                                          BoxShadow(
+                                            color: AppColors.primaryBlue.withOpacity(0.3),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 4),
+                                          )
+                                        ]
+                                      : null,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Found Nearby',
+                                  style: TextStyle(
+                                    fontWeight: _isFoundTabActive ? FontWeight.bold : FontWeight.w500,
+                                    color: _isFoundTabActive ? Colors.white : AppColors.textGrey,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _isFoundTabActive = false),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: !_isFoundTabActive ? Colors.white : Colors.transparent,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: !_isFoundTabActive
-                                    ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)]
-                                    : null,
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                'Looking For',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: !_isFoundTabActive ? Colors.orange : AppColors.textGrey,
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _isFoundTabActive = false),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  gradient: !_isFoundTabActive 
+                                      ? const LinearGradient(colors: [Colors.orange, Colors.orangeAccent])
+                                      : null,
+                                  color: !_isFoundTabActive ? null : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: !_isFoundTabActive
+                                      ? [
+                                          BoxShadow(
+                                            color: Colors.orange.withOpacity(0.3),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 4),
+                                          )
+                                        ]
+                                      : null,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Looking For',
+                                  style: TextStyle(
+                                    fontWeight: !_isFoundTabActive ? FontWeight.bold : FontWeight.w500,
+                                    color: !_isFoundTabActive ? Colors.white : AppColors.textGrey,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
 
             // Categories
             Padding(
@@ -352,14 +373,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showReportOptions(context);
-        },
-        backgroundColor: AppColors.primaryBlue,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+        ), // SafeArea
+      ), // AnimatedGradientBg
     );
   }
 
@@ -496,20 +511,31 @@ class _HomeScreenState extends State<HomeScreen> {
           _selectedLocation = label;
         });
       },
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryBlue : Colors.white,
+          color: isSelected ? AppColors.primaryBlue : Colors.white.withOpacity(0.7),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primaryBlue : Colors.grey.shade300,
+            color: isSelected ? AppColors.primaryBlue : Colors.white,
+            width: 1.5,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primaryBlue.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [],
         ),
         child: Text(
           label,
           style: TextStyle(
             color: isSelected ? Colors.white : AppColors.textGrey,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           ),
         ),
       ),

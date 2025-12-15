@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/ui_utils.dart';
 import '../../core/models/models.dart';
 import '../claim/verification_screen.dart';
 import '../claim/widgets/claim_accepted_dialog.dart';
@@ -70,9 +71,7 @@ class _StatusScreenState extends State<StatusScreen> {
       );
     } else {
       // Already claimed - show info
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This item has been claimed successfully.')),
-      );
+      UiUtils.showModernSnackBar(context, 'This item has been claimed successfully.');
     }
   }
 
@@ -91,9 +90,7 @@ class _StatusScreenState extends State<StatusScreen> {
       );
     } else {
       // Pending - show info
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Waiting for finder to verify your claim...')),
-      );
+      UiUtils.showModernSnackBar(context, 'Waiting for finder to verify your claim...', isSuccess: true);
     }
   }
 
@@ -108,67 +105,91 @@ class _StatusScreenState extends State<StatusScreen> {
           children: [
             const SizedBox(height: 24),
             
-            // Toggle Switch
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primaryBlue),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _isClaimedTabActive = false),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
+            const SizedBox(height: 24),
+            
+            // Modern Segmented Control
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: AppColors.inputBackground,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isClaimedTabActive = false),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: !_isClaimedTabActive 
+                              ? Colors.white 
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: !_isClaimedTabActive
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  )
+                                ]
+                              : [],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Reported Items',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
                             color: !_isClaimedTabActive 
-                                ? AppColors.primaryBlue 
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            'Reported Item',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: !_isClaimedTabActive 
-                                  ? Colors.white 
-                                  : AppColors.primaryBlue,
-                            ),
+                                ? AppColors.textDark 
+                                : AppColors.textGrey,
+                            fontSize: 14,
                           ),
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _isClaimedTabActive = true),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _isClaimedTabActive = true),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _isClaimedTabActive 
+                              ? Colors.white 
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: _isClaimedTabActive
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  )
+                                ]
+                              : [],
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Claimed Items',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
                             color: _isClaimedTabActive 
-                                ? AppColors.primaryBlue 
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            'Claimed Item',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: _isClaimedTabActive 
-                                  ? Colors.white 
-                                  : AppColors.primaryBlue,
-                            ),
+                                ? AppColors.textDark 
+                                : AppColors.textGrey,
+                            fontSize: 14,
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             

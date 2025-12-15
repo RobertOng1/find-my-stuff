@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/ui_utils.dart';
 import '../chat/chat_screen.dart';
 
 class ClaimAcceptedScreen extends StatelessWidget {
@@ -112,9 +113,7 @@ class ClaimAcceptedScreen extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () {
                     // Mock Download
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Receipt Downloaded')),
-                    );
+                    UiUtils.showModernSnackBar(context, 'Receipt Downloaded');
                   },
                   icon: const Icon(Icons.download_rounded, size: 20),
                   label: const Text('Download Receipt'),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
 import '../chat/chat_screen.dart';
 import 'widgets/chat_list_tile.dart';
@@ -101,7 +102,7 @@ class MessageListScreen extends StatelessWidget {
                               ),
                             );
                           },
-                        );
+                        ).animate().fade(duration: 400.ms, delay: (100 * index).ms).slideY(begin: 0.2, end: 0);
                       },
                     ),
             ),

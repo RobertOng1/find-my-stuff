@@ -67,49 +67,77 @@ class RegisterScreen extends StatelessWidget {
                       ),
                     ),
                     
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 32),
                     
-                    // Title
-                    Text(
-                      'Hello! Register to get\nstarted',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
-                            height: 1.3,
+                    // Glassmorphism Card
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryBlue.withOpacity(0.1),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
                           ),
-                    ),
-                    
-                    const SizedBox(height: 30),
-                    
-                    // Form
-                    const CustomTextField(
-                      hintText: 'Username',
-                    ),
-                    const SizedBox(height: 16),
-                    const CustomTextField(
-                      hintText: 'Email',
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 16),
-                    const CustomTextField(
-                      hintText: 'Password',
-                      isPassword: true,
-                    ),
-                    const SizedBox(height: 16),
-                    const CustomTextField(
-                      hintText: 'Confirm password',
-                      isPassword: true,
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title
+                          Text(
+                            'Hello! Register to get\nstarted',
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textDark,
+                                  height: 1.2,
+                                ),
+                          ),
+                          const SizedBox(height: 32),
+                          
+                          // Form
+                          const CustomTextField(
+                            hintText: 'Username',
+                            labelText: 'Username',
+                            prefixIcon: Icon(Icons.person_outline, size: 20),
+                          ),
+                          const SizedBox(height: 16),
+                          const CustomTextField(
+                            hintText: 'Email',
+                            labelText: 'Email Address',
+                            keyboardType: TextInputType.emailAddress,
+                            prefixIcon: Icon(Icons.email_outlined, size: 20),
+                          ),
+                          const SizedBox(height: 16),
+                          const CustomTextField(
+                            hintText: 'Password',
+                            labelText: 'Password',
+                            isPassword: true,
+                            prefixIcon: Icon(Icons.lock_outline, size: 20),
+                          ),
+                          const SizedBox(height: 16),
+                          const CustomTextField(
+                            hintText: 'Confirm password',
+                            labelText: 'Confirm Password',
+                            isPassword: true,
+                            prefixIcon: Icon(Icons.lock_reset, size: 20),
+                          ),
+                          
+                          const SizedBox(height: 32),
+                          
+                          // Register Button
+                          CustomButton(
+                            text: 'Register',
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
                     ),
                     
                     const SizedBox(height: 32),
-                    
-                    // Register Button
-                    CustomButton(
-                      text: 'Register',
-                      onPressed: () {},
-                    ),
-                    
-                    const SizedBox(height: 24),
                     
                     // Or Register with
                     const Row(
@@ -153,7 +181,7 @@ class RegisterScreen extends StatelessWidget {
                       ],
                     ),
                     
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 32),
                     
                     // Login Link
                     Row(
@@ -177,7 +205,6 @@ class RegisterScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),

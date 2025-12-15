@@ -4,6 +4,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../core/services/firestore_service.dart';
 import '../../core/models/models.dart';
+import '../../core/utils/ui_utils.dart';
 
 
 class AddReportScreen extends StatefulWidget {
@@ -34,9 +35,7 @@ class _AddReportScreenState extends State<AddReportScreen> {
 
   Future<void> _submitReport() async {
     if (_titleController.text.isEmpty || _locationController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in required fields')),
-      );
+      UiUtils.showModernSnackBar(context, 'Please fill in required fields', isSuccess: false);
       return;
     }
 
@@ -58,16 +57,12 @@ class _AddReportScreenState extends State<AddReportScreen> {
       await _firestoreService.createPost(newItem);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Report Posted Successfully!')),
-        );
+      UiUtils.showModernSnackBar(context, 'Report Posted Successfully!');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        UiUtils.showModernSnackBar(context, 'Error: $e', isSuccess: false);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

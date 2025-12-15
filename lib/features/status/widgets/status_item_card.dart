@@ -63,21 +63,40 @@ class StatusItemCard extends StatelessWidget {
       }
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowColor,
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           // Circular Image
           Container(
-            width: 56,
-            height: 56,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.grey.shade200,
+              color: Colors.grey.shade100,
               image: DecorationImage(
                 image: AssetImage(imageUrl),
                 fit: BoxFit.cover,
               ),
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 8,
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 16),
@@ -93,15 +112,23 @@ class StatusItemCard extends StatelessWidget {
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark,
+                    letterSpacing: 0.3,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  status,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: statusColor,
-                    fontWeight: FontWeight.w500,
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    status,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: statusColor,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -109,22 +136,33 @@ class StatusItemCard extends StatelessWidget {
           ),
           
           // Action Button
-          ElevatedButton(
-            onPressed: onActionPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: buttonColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              elevation: 0,
-            ),
-            child: Text(
-              buttonLabel,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
+          const SizedBox(width: 8),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onActionPressed,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: buttonColor,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: buttonColor.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  buttonLabel,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ),

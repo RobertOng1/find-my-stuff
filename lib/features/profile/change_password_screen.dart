@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/utils/ui_utils.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
@@ -16,6 +18,15 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
   
   bool _isLoading = false;
+  final AuthService _authService = AuthService(); // Instantiated AuthService
+
+  @override
+  void dispose() {
+    _oldPasswordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   void _updatePassword() async {
     final newPassword = _newPasswordController.text;
@@ -23,24 +34,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     // Validation
     if (newPassword.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters')),
-      );
+      UiUtils.showModernSnackBar(context, 'Password must be at least 6 characters', isSuccess: false);
       return;
     }
 
     if (newPassword != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
-      );
+      UiUtils.showModernSnackBar(context, 'Passwords do not match', isSuccess: false);
       return;
     }
 
-    // Simulate API Call
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isLoading = false);
-
     if (!mounted) return;
 
     // Show Success Modal
@@ -54,9 +57,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle, color: AppColors.successGreen, size: 80),
+              Icon(Icons.check_circle, color: AppColors.successGreen, size: 80),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Password Changed!',
                 style: TextStyle(
                   fontSize: 20,
@@ -65,7 +68,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Your password has been updated successfully.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.textGrey),
@@ -93,10 +96,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark, size: 20),
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.textDark, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Change Password',
           style: TextStyle(
             color: AppColors.textDark,
@@ -163,7 +166,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               const SizedBox(height: 40),
               
               _isLoading
-                  ? const CircularProgressIndicator(color: AppColors.primaryBlue)
+                  ? CircularProgressIndicator(color: AppColors.primaryBlue)
                   : CustomButton(
                       text: 'Update Password',
                       onPressed: _updatePassword,

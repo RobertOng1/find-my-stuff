@@ -65,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
               'FindMyStuff',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppColors.darkBlue,
+                    color: AppColors.primaryBlue,
                     letterSpacing: 1.5,
                   ),
             )

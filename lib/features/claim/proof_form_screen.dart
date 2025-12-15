@@ -4,6 +4,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../core/services/firestore_service.dart';
 import '../../core/models/models.dart';
+import '../../core/utils/ui_utils.dart';
 
 class ProofFormScreen extends StatefulWidget {
   final ItemModel item;
@@ -27,9 +28,7 @@ class _ProofFormScreenState extends State<ProofFormScreen> {
 
   Future<void> _submitClaim() async {
     if (_proofDescriptionController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please describe the item features')),
-      );
+      UiUtils.showModernSnackBar(context, 'Please describe the item features', isSuccess: false);
       return;
     }
 
@@ -52,19 +51,12 @@ class _ProofFormScreenState extends State<ProofFormScreen> {
       await _firestoreService.submitClaim(newClaim);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Claim submitted! Waiting for finder verification.'),
-            backgroundColor: AppColors.successGreen,
-          ),
-        );
+        UiUtils.showModernSnackBar(context, 'Proof submitted successfully!');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        UiUtils.showModernSnackBar(context, 'Error: $e', isSuccess: false);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

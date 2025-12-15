@@ -67,59 +67,91 @@ class LoginScreen extends StatelessWidget {
                       ),
                     ),
                     
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
                     
-                    // Title
-                    Text(
-                      'Welcome back! Glad to see\nyou, Again!',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
-                            height: 1.3,
+                    // Glassmorphism Card
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.85),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryBlue.withOpacity(0.1),
+                            blurRadius: 24,
+                            offset: const Offset(0, 12),
                           ),
-                    ),
-                    
-                    const SizedBox(height: 40),
-                    
-                    // Form
-                    const CustomTextField(
-                      hintText: 'Enter your email',
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 16),
-                    const CustomTextField(
-                      hintText: 'Enter your password',
-                      isPassword: true,
-                    ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Forgot Password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {},
-                        child: const Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            color: AppColors.textGrey,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                        ],
                       ),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Login Button
-                    CustomButton(
-                      text: 'Login',
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const MainScreen()),
-                        );
-                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Title
+                          Text(
+                            'Welcome back!',
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textDark,
+                                  height: 1.2,
+                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Enter your details to sign in',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: AppColors.textGrey,
+                                ),
+                          ),
+                          
+                          const SizedBox(height: 32),
+                          
+                          // Form
+                          const CustomTextField(
+                            hintText: 'Email',
+                            labelText: 'Email Address',
+                            keyboardType: TextInputType.emailAddress,
+                            prefixIcon: Icon(Icons.email_outlined, size: 20),
+                          ),
+                          const SizedBox(height: 20),
+                          const CustomTextField(
+                            hintText: 'Password',
+                            labelText: 'Password',
+                            isPassword: true,
+                            prefixIcon: Icon(Icons.lock_outline, size: 20),
+                          ),
+                          
+                          const SizedBox(height: 12),
+                          
+                          // Forgot Password
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {},
+                              child: const Text(
+                                'Forgot Password?',
+                                style: TextStyle(
+                                  color: AppColors.primaryBlue,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 24),
+                          
+                          // Login Button
+                          CustomButton(
+                            text: 'Login',
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => const MainScreen()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                     
                     const SizedBox(height: 32),
@@ -142,7 +174,7 @@ class LoginScreen extends StatelessWidget {
                       ],
                     ),
                     
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
                     
                     // Social Buttons
                     Row(
@@ -166,7 +198,7 @@ class LoginScreen extends StatelessWidget {
                       ],
                     ),
                     
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
                     
                     // Register Link
                     FittedBox(

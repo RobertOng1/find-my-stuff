@@ -20,86 +20,114 @@ class ProfileScreen extends StatelessWidget {
               clipBehavior: Clip.none,
               alignment: Alignment.center,
               children: [
-                // Blue Header Background
-                Container(
-                  height: 220,
-                  width: double.infinity,
-                  color: AppColors.primaryBlue,
-                  padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
-                  alignment: Alignment.topCenter,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-                        onPressed: () {
-                          // Handled by MainScreen or Navigator
-                        },
-                      ),
-                      const Text(
-                        'My Profile',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                // Curved Header Background
+                CustomPaint(
+                  painter: CurvedHeaderPainter(),
+                  child: Container(
+                    height: 260, // Taller to accommodate curve
+                    width: double.infinity,
+                    padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
+                    alignment: Alignment.topCenter,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+                          onPressed: () {
+                            // Handled by MainScreen or Navigator
+                          },
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.settings, color: Colors.white),
-                        onPressed: () {},
-                      ),
-                    ],
+                        const Text(
+                          'My Profile',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.settings_outlined, color: Colors.white),
+                            onPressed: () {},
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
-                // Profile Card
+                // Glass Profile Card
                 Positioned(
-                  top: 120,
+                  top: 130, // Adjusted top
                   left: 24,
                   right: 24,
                   child: Container(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
+                          color: AppColors.primaryBlue.withOpacity(0.15),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
                         ),
                       ],
                     ),
                     child: Column(
                       children: [
-                        const CircleAvatar(
-                          radius: 40,
-                          backgroundImage: AssetImage('assets/images/logo.png'), // Placeholder
-                          backgroundColor: Colors.grey,
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [AppColors.primaryBlue, AppColors.primaryLight],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: const CircleAvatar(
+                            radius: 42,
+                            backgroundImage: AssetImage('assets/images/logo.png'), 
+                            backgroundColor: Colors.white,
+                          ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         const Text(
                           'Farras Syahputra',
                           style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 20, // Larger
                             fontWeight: FontWeight.bold,
                             color: AppColors.textDark,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          'Mahasiswa Teknik Industri',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textGrey,
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryLight.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Mahasiswa Teknik Industri',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
+                        const SizedBox(height: 20),
+                        const Divider(color: Color(0xFFF0F0F0), thickness: 1),
                         const SizedBox(height: 16),
-                        const Divider(color: Color(0xFFEEEEEE)),
-                        const SizedBox(height: 16),
-                        _buildInfoRow(Icons.email_outlined, 'Email', 'rassonly23@students.usu.ac.id'),
+                        _buildInfoRow(Icons.email_rounded, 'Email', 'rassonly23@students.usu.ac.id'),
                         const SizedBox(height: 12),
-                        _buildInfoRow(Icons.phone_outlined, 'Phone', '+62 857-5849-0242'),
+                        _buildInfoRow(Icons.phone_rounded, 'Phone', '+62 857-5849-0242'),
                       ],
                     ),
                   ),
@@ -107,19 +135,19 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
             
-            // Spacing for the overlapping card (120 top + card height approx 280 - 220 container)
-            const SizedBox(height: 220),
+            // Spacing
+            const SizedBox(height: 240),
 
-            // Stats Row
+            // Glass Stats Row
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 children: [
-                  _buildStatCard('2', 'Lost Item', const Color(0xFFFFC107)),
+                  _buildGlassStatCard('2', 'Lost Item', const Color(0xFFFFA000)),
                   const SizedBox(width: 12),
-                  _buildStatCard('1', 'Found Item', const Color(0xFFFFC107)),
+                  _buildGlassStatCard('1', 'Found Item', AppColors.successGreen),
                   const SizedBox(width: 12),
-                  _buildStatCard('3', 'Returned', const Color(0xFFFFC107)),
+                  _buildGlassStatCard('3', 'Returned', AppColors.primaryBlue),
                 ],
               ),
             ),
@@ -383,30 +411,39 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String count, String label, Color color) {
+  Widget _buildGlassStatCard(String count, String label, Color accentColor) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(color: accentColor.withOpacity(0.2)),
         ),
         child: Column(
           children: [
             Text(
               count,
-              style: const TextStyle(
-                fontSize: 16,
+              style: TextStyle(
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
+                color: accentColor,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 10,
-                color: AppColors.textDark,
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textGrey,
+                fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
             ),
@@ -420,8 +457,9 @@ class ProfileScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
+        color: bgColor.withOpacity(0.5), // Glassy feel
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: iconColor.withOpacity(0.1)),
       ),
       child: Row(
         children: [
@@ -429,7 +467,13 @@ class ProfileScreen extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: iconColor.withOpacity(0.2),
+                  blurRadius: 8,
+                ),
+              ],
             ),
             child: Icon(icon, color: iconColor, size: 20),
           ),
@@ -453,29 +497,72 @@ class ProfileScreen extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFEEEEEE)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFF0F0F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: AppColors.textDark),
-            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 18, color: AppColors.primaryBlue),
+            ),
+            const SizedBox(width: 16),
             Text(
               title,
               style: const TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textDark,
               ),
             ),
             const Spacer(),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: AppColors.textGrey),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textGrey),
           ],
         ),
       ),
     );
   }
+}
+
+class CurvedHeaderPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        colors: [AppColors.primaryBlue, AppColors.primaryLight],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final path = Path();
+    path.lineTo(0, size.height - 60);
+    
+    // Create a smooth quadratic bezier curve
+    path.quadraticBezierTo(
+      size.width / 2, size.height, 
+      size.width, size.height - 60
+    );
+    
+    path.lineTo(size.width, 0);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

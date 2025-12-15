@@ -5,6 +5,7 @@ import 'widgets/claim_rejected_dialog.dart';
 
 import '../../core/models/models.dart';
 import '../../core/services/firestore_service.dart';
+import '../../core/utils/ui_utils.dart';
 
 class VerifyProofScreen extends StatefulWidget {
   final ClaimModel claim;
@@ -35,11 +36,10 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Claim ${status == 'ACCEPTED' ? 'Accepted' : 'Rejected'}!'),
-            backgroundColor: status == 'ACCEPTED' ? const Color(0xFF27AE60) : AppColors.errorRed,
-          ),
+        UiUtils.showModernSnackBar(
+          context,
+          'Claim ${status == 'ACCEPTED' ? 'Accepted' : 'Rejected'}!',
+          isSuccess: status == 'ACCEPTED',
         );
         
         if (status == 'ACCEPTED') {
@@ -53,8 +53,10 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+        UiUtils.showModernSnackBar(
+          context,
+          'Error: $e',
+          isSuccess: false,
         );
       }
     } finally {

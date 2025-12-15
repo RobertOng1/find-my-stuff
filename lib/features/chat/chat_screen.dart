@@ -94,30 +94,33 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           // Chat List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessageBubble(
-                  message['text'],
-                  message['isMe'],
-                  message['time'],
-                );
-              },
+            child: Container(
+              color: const Color(0xFFF9FAFC),
+              child: ListView.builder(
+                padding: const EdgeInsets.all(20),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final message = _messages[index];
+                  return _buildMessageBubble(
+                    message['text'],
+                    message['isMe'],
+                    message['time'],
+                  );
+                },
+              ),
             ),
           ),
 
           // Input Area
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
+                  blurRadius: 20,
+                  offset: const Offset(0, -4),
                 ),
               ],
             ),
@@ -125,37 +128,59 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF5F6FA),
-                      borderRadius: BorderRadius.circular(24),
+                      color: const Color(0xFFF0F3F8),
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: Colors.transparent),
                     ),
                     child: TextField(
                       controller: _messageController,
-                      decoration: const InputDecoration(
-                        hintText: 'Write your message',
-                        hintStyle: TextStyle(color: AppColors.textGrey, fontSize: 14),
+                      style: const TextStyle(fontSize: 15),
+                      decoration: InputDecoration(
+                        hintText: 'Type a message...',
+                        hintStyle: TextStyle(color: AppColors.textGrey.withOpacity(0.8), fontSize: 15),
                         border: InputBorder.none,
-                        suffixIcon: Icon(Icons.camera_alt_outlined, color: AppColors.textGrey, size: 20),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.camera_alt_rounded, color: AppColors.textGrey),
+                          onPressed: () {},
+                        ),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                IconButton(
-                  icon: const Icon(Icons.send, color: AppColors.primaryBlue),
-                  onPressed: () {
-                    if (_messageController.text.isNotEmpty) {
-                      setState(() {
-                        _messages.add({
-                          'text': _messageController.text,
-                          'isMe': true,
-                          'time': 'Now',
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primaryLight, AppColors.primaryBlue],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryBlue.withOpacity(0.4),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                    onPressed: () {
+                      if (_messageController.text.isNotEmpty) {
+                        setState(() {
+                          _messages.add({
+                            'text': _messageController.text,
+                            'isMe': true,
+                            'time': 'Now',
+                          });
+                          _messageController.clear();
                         });
-                        _messageController.clear();
-                      });
-                    }
-                  },
+                      }
+                    },
+                  ),
                 ),
               ],
             ),
@@ -167,82 +192,128 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildMessageBubble(String text, bool isMe, String time) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          Container(
-            constraints: const BoxConstraints(maxWidth: 260),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isMe ? AppColors.primaryBlue : const Color(0xFFF0F2F5),
-              borderRadius: BorderRadius.only(
-                topLeft: const Radius.circular(16),
-                topRight: const Radius.circular(16),
-                bottomLeft: Radius.circular(isMe ? 16 : 0),
-                bottomRight: Radius.circular(isMe ? 0 : 16),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  text,
-                  style: TextStyle(
-                    color: isMe ? Colors.white : AppColors.textDark,
-                    fontSize: 14,
-                  ),
+          Row(
+            mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (!isMe) ...[
+                const CircleAvatar(
+                  radius: 14,
+                  backgroundImage: AssetImage('assets/images/logo.png'),
                 ),
-                if (!isMe && text.contains('submit proof')) ...[
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProofFormScreen(
-                            item: ItemModel(
-                              id: 'dummy_id',
-                              userId: 'dummy_finder',
-                              title: widget.itemName,
-                              description: 'Unknown description',
-                              location: 'Unknown location',
-                              imageUrl: 'assets/images/logo.png',
-                              type: 'LOST',
-                              category: 'General',
-                              date: DateTime.now(),
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 280),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: isMe
+                        ? const LinearGradient(
+                            colors: [AppColors.primaryLight, AppColors.primaryBlue],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: isMe ? null : Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(20),
+                      topRight: const Radius.circular(20),
+                      bottomLeft: Radius.circular(isMe ? 20 : 4),
+                      bottomRight: Radius.circular(isMe ? 4 : 20),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isMe 
+                            ? AppColors.primaryBlue.withOpacity(0.2)
+                            : Colors.black.withOpacity(0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        text,
+                        style: TextStyle(
+                          color: isMe ? Colors.white : AppColors.textDark,
+                          fontSize: 15,
+                          height: 1.4,
+                        ),
+                      ),
+                      if (!isMe && text.contains('submit proof')) ...[
+                        const SizedBox(height: 12),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProofFormScreen(
+                                  item: ItemModel(
+                                    id: 'dummy_id',
+                                    userId: 'dummy_finder',
+                                    title: widget.itemName,
+                                    description: 'Unknown description',
+                                    location: 'Unknown location',
+                                    imageUrl: 'assets/images/logo.png',
+                                    type: 'LOST',
+                                    category: 'General',
+                                    date: DateTime.now(),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: AppColors.backgroundWhite,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.assignment_outlined, size: 16, color: AppColors.primaryBlue),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Fill Claim Form',
+                                  style: TextStyle(
+                                    color: AppColors.primaryBlue,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.primaryBlue),
-                      ),
-                      child: const Text(
-                        'Fill Claim Form',
-                        style: TextStyle(
-                          color: AppColors.primaryBlue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
+                      ],
+                    ],
                   ),
-                ],
-              ],
-            ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            time,
-            style: const TextStyle(
-              color: AppColors.textGrey,
-              fontSize: 10,
+          const SizedBox(height: 6),
+          Padding(
+            padding: EdgeInsets.only(
+              left: isMe ? 0 : 44,
+              right: isMe ? 4 : 0,
+            ),
+            child: Text(
+              time,
+              style: TextStyle(
+                color: AppColors.textGrey.withOpacity(0.6),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

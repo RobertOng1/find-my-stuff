@@ -23,104 +23,142 @@ class ChatListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        child: Row(
-          children: [
-            // Avatar with online indicator
-            Stack(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
               children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.grey.shade200,
-                    image: DecorationImage(
-                      image: AssetImage(avatarUrl),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                if (isOnline)
-                  Positioned(
-                    bottom: 2,
-                    left: 2,
-                    child: Container(
-                      width: 12,
-                      height: 12,
+                // Avatar with online indicator
+                Stack(
+                  children: [
+                    Container(
+                      width: 56,
+                      height: 56,
                       decoration: BoxDecoration(
-                        color: AppColors.successGreen,
                         shape: BoxShape.circle,
+                        color: Colors.grey.shade100,
+                        image: DecorationImage(
+                          image: AssetImage(avatarUrl),
+                          fit: BoxFit.cover,
+                        ),
                         border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 6,
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            
-            // Name & Message Preview
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    userName,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    lastMessage,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textGrey,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            
-            // Time & Unread Badge
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textGrey,
+                    if (isOnline)
+                      Positioned(
+                        bottom: 2,
+                        right: 2,
+                        child: Container(
+                          width: 14,
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: AppColors.successGreen,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2.5),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 16),
+                
+                // Name & Message Preview
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            userName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                          Text(
+                            time,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: unreadCount > 0 
+                                  ? AppColors.primaryBlue 
+                                  : AppColors.textGrey,
+                              fontWeight: unreadCount > 0 
+                                  ? FontWeight.bold 
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              lastMessage,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: unreadCount > 0 
+                                    ? AppColors.textDark 
+                                    : AppColors.textGrey,
+                                fontWeight: unreadCount > 0 
+                                    ? FontWeight.w600 
+                                    : FontWeight.normal,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (unreadCount > 0)
+                            Container(
+                              margin: const EdgeInsets.only(left: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: const BoxDecoration(
+                                color: AppColors.primaryBlue,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                unreadCount.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 6),
-                if (unreadCount > 0)
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryBlue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      unreadCount.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -127,86 +127,129 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _screens,
-      ),
       extendBody: true,
-      floatingActionButton: Container(
-        height: 56,
-        width: 56,
-        margin: const EdgeInsets.only(top: 24),
-        decoration: BoxDecoration(
-          color: AppColors.primaryBlue,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryBlue.withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: IconButton(
-          onPressed: () => _showReportOptions(context),
-          icon: const Icon(Icons.add, color: Colors.white, size: 28),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildNavItem(Icons.dashboard_outlined, Icons.dashboard, 'Dashboard', 0),
-                _buildNavItem(Icons.assignment_outlined, Icons.assignment, 'Status', 1),
-                const SizedBox(width: 56), // Space for FAB
-                _buildNavItem(Icons.message_outlined, Icons.message, 'Message', 3),
-                _buildNavItem(Icons.person_outline, Icons.person, 'Profile', 4),
-              ],
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // 1. Main Content
+          IndexedStack(
+            index: _selectedIndex,
+            children: _screens,
+          ),
+          
+          // 2. Navigation Bar (Bottom)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Container(
+                  height: 70, // Height for the visual nav bar
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildNavItem(Icons.dashboard_outlined, Icons.dashboard_rounded, 'Dashboard', 0),
+                      _buildNavItem(Icons.assignment_outlined, Icons.assignment_rounded, 'Status', 1),
+                      const SizedBox(width: 56), // Space for FAB center
+                      _buildNavItem(Icons.message_outlined, Icons.message_rounded, 'Message', 3),
+                      _buildNavItem(Icons.person_outline, Icons.person_rounded, 'Profile', 4),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+          
+          // 3. FAB (Centered and Elevated)
+          Positioned(
+            bottom: 30, // Positioned to overlap nicely
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                height: 64,
+                width: 64,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.primaryLight, AppColors.primaryBlue],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryBlue.withOpacity(0.4),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _showReportOptions(context),
+                    borderRadius: BorderRadius.circular(20),
+                    child: const Icon(Icons.add, color: Colors.white, size: 32),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildNavItem(IconData icon, IconData activeIcon, String label, int index) {
     final isSelected = _selectedIndex == index;
+    
     return GestureDetector(
       onTap: () => _onItemTapped(index),
       behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 60,
+      child: SizedBox( // Fixed size container
+        width: 64,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? AppColors.primaryBlue : AppColors.textGrey,
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: EdgeInsets.all(isSelected ? 10 : 0), // Slightly adjusted padding
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : Colors.transparent,
+                borderRadius: BorderRadius.circular(16), // Softer radius
+              ),
+              child: Icon(
+                isSelected ? activeIcon : icon,
                 color: isSelected ? AppColors.primaryBlue : AppColors.textGrey,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                size: 24,
               ),
             ),
+            if (isSelected) const SizedBox(height: 4),
+            if (isSelected)
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            // Explicit transparent spacer to keep alignment if needed, or remove
           ],
         ),
       ),
