@@ -4,6 +4,8 @@ import '../claim/proof_form_screen.dart';
 import '../claim/claim_accepted_screen.dart';
 import '../claim/widgets/claim_rejected_dialog.dart';
 import '../../core/models/models.dart';
+import 'dart:ui';
+import '../../widgets/animated_gradient_bg.dart';
 
 class ChatScreen extends StatefulWidget {
   final String itemName;
@@ -32,10 +34,21 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      extendBodyBehindAppBar: true, // Glass feel
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0.5,
+        backgroundColor: Colors.white.withOpacity(0.8), // Semi-transparent glass header
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: Colors.black.withOpacity(0.05))),
+          ),
+          child: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark, size: 20),
           onPressed: () => Navigator.pop(context),
@@ -90,96 +103,104 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // Chat List
-          Expanded(
-            child: Container(
-              color: const Color(0xFFF9FAFC),
-              child: ListView.builder(
-                padding: const EdgeInsets.all(20),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final message = _messages[index];
-                  return _buildMessageBubble(
-                    message['text'],
-                    message['isMe'],
-                    message['time'],
-                  );
-                },
-              ),
-            ),
-          ),
-
-          // Input Area
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4),
-                ),
-              ],
-            ),
-            child: Row(
+          const AnimatedGradientBg(), // The new global gradient
+          SafeArea(
+            child: Column(
               children: [
+                // Chat List
                 Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0F3F8),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(color: Colors.transparent),
-                    ),
-                    child: TextField(
-                      controller: _messageController,
-                      style: const TextStyle(fontSize: 15),
-                      decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        hintStyle: TextStyle(color: AppColors.textGrey.withOpacity(0.8), fontSize: 15),
-                        border: InputBorder.none,
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.camera_alt_rounded, color: AppColors.textGrey),
-                          onPressed: () {},
-                        ),
-                      ),
-                    ),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      return _buildMessageBubble(
+                        message['text'],
+                        message['isMe'],
+                        message['time'],
+                      );
+                    },
                   ),
                 ),
-                const SizedBox(width: 12),
+
+                // Input Area
                 Container(
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [AppColors.primaryLight, AppColors.primaryBlue],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.9), // Glassy input area
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryBlue.withOpacity(0.4),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, -4),
                       ),
                     ],
                   ),
-                  child: IconButton(
-                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
-                    onPressed: () {
-                      if (_messageController.text.isNotEmpty) {
-                        setState(() {
-                          _messages.add({
-                            'text': _messageController.text,
-                            'isMe': true,
-                            'time': 'Now',
-                          });
-                          _messageController.clear();
-                        });
-                      }
-                    },
+                  child: SafeArea(
+                    top: false,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF0F3F8),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: Colors.transparent),
+                            ),
+                            child: TextField(
+                              controller: _messageController,
+                              style: const TextStyle(fontSize: 15),
+                              decoration: InputDecoration(
+                                hintText: 'Type a message...',
+                                hintStyle: TextStyle(color: AppColors.textGrey.withOpacity(0.8), fontSize: 15),
+                                border: InputBorder.none,
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.attach_file_rounded, color: AppColors.textGrey, size: 20),
+                                  onPressed: () {},
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        GestureDetector(
+                          onTap: () {
+                            if (_messageController.text.isNotEmpty) {
+                              setState(() {
+                                _messages.add({
+                                  'text': _messageController.text,
+                                  'isMe': true,
+                                  'time': 'Now',
+                                });
+                                _messageController.clear();
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [AppColors.primaryLight, AppColors.primaryBlue],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primaryBlue.withOpacity(0.4),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -201,9 +222,16 @@ class _ChatScreenState extends State<ChatScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (!isMe) ...[
-                const CircleAvatar(
-                  radius: 14,
-                  backgroundImage: AssetImage('assets/images/logo.png'),
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2)),
+                  ),
+                  child: const CircleAvatar(
+                    radius: 16,
+                    backgroundImage: AssetImage('assets/images/logo.png'),
+                  ),
                 ),
                 const SizedBox(width: 8),
               ],

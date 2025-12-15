@@ -67,15 +67,16 @@ class StatusItemCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withOpacity(0.9), // Glass-like opacity
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowColor,
-            blurRadius: 12,
+            color: AppColors.primaryBlue.withOpacity(0.08), // Subtle blue shadow
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(color: Colors.white.withOpacity(0.5)),
       ),
       child: Row(
         children: [
@@ -121,6 +122,7 @@ class StatusItemCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: statusColor.withOpacity(0.2)),
                   ),
                   child: Text(
                     status,
@@ -145,7 +147,11 @@ class StatusItemCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: buttonColor,
+                  gradient: LinearGradient( // Gradient button
+                    colors: [buttonColor, buttonColor.withOpacity(0.8)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(

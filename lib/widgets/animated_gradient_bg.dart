@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/theme/app_colors.dart';
 
 class AnimatedGradientBg extends StatefulWidget {
   final Widget? child;
@@ -11,78 +12,23 @@ class AnimatedGradientBg extends StatefulWidget {
 class _AnimatedGradientBgState extends State<AnimatedGradientBg>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<Alignment> _topAlignmentAnimation;
-  late Animation<Alignment> _bottomAlignmentAnimation;
+  late Animation<Color?> _colorAnimation;
 
   @override
   void initState() {
     super.initState();
+    // Ultra-slow, breathing animation (20 seconds)
     _controller = AnimationController(
-      duration: const Duration(seconds: 10),
+      duration: const Duration(seconds: 20),
       vsync: this,
     )..repeat(reverse: true);
 
-    _topAlignmentAnimation = TweenSequence<Alignment>([
-      TweenSequenceItem(
-        tween: Tween<Alignment>(
-          begin: Alignment.topLeft,
-          end: Alignment.topRight,
-        ),
-        weight: 1,
-      ),
-      TweenSequenceItem(
-        tween: Tween<Alignment>(
-          begin: Alignment.topRight,
-          end: Alignment.bottomRight,
-        ),
-        weight: 1,
-      ),
-      TweenSequenceItem(
-        tween: Tween<Alignment>(
-          begin: Alignment.bottomRight,
-          end: Alignment.bottomLeft,
-        ),
-        weight: 1,
-      ),
-      TweenSequenceItem(
-        tween: Tween<Alignment>(
-          begin: Alignment.bottomLeft,
-          end: Alignment.topLeft,
-        ),
-        weight: 1,
-      ),
-    ]).animate(_controller);
-
-    _bottomAlignmentAnimation = TweenSequence<Alignment>([
-      TweenSequenceItem(
-        tween: Tween<Alignment>(
-          begin: Alignment.bottomRight,
-          end: Alignment.bottomLeft,
-        ),
-        weight: 1,
-      ),
-      TweenSequenceItem(
-        tween: Tween<Alignment>(
-          begin: Alignment.bottomLeft,
-          end: Alignment.topLeft,
-        ),
-        weight: 1,
-      ),
-      TweenSequenceItem(
-        tween: Tween<Alignment>(
-          begin: Alignment.topLeft,
-          end: Alignment.topRight,
-        ),
-        weight: 1,
-      ),
-      TweenSequenceItem(
-        tween: Tween<Alignment>(
-          begin: Alignment.topRight,
-          end: Alignment.bottomRight,
-        ),
-        weight: 1,
-      ),
-    ]).animate(_controller);
+    // Subtle shift from "Paper White" to "Soft Blue"
+    // Increased saturation to ensure white glass cards pop against it.
+    _colorAnimation = ColorTween(
+      begin: const Color(0xFFFFFFFF), 
+      end: AppColors.primaryLight.withOpacity(0.15),   // Deeper cool blue
+    ).animate(_controller);
   }
 
   @override
@@ -99,14 +45,14 @@ class _AnimatedGradientBgState extends State<AnimatedGradientBg>
         return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: const [
-                Color(0xFFE3F2FD), // Light Blue
-                Color(0xFFE1F5FE), // Lighter Blue
-                Color(0xFFF3E5F5), // Light Purple tint
-                Color(0xFFE0F7FA), // Cyan tint
+              // Vertical gradient is natural (like sky/light)
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                const Color(0xFFFFFFFF), // Always white at top for status bar clarity
+                _colorAnimation.value ?? AppColors.primaryLight.withOpacity(0.15), // Deeper breathing bottom
               ],
-              begin: _topAlignmentAnimation.value,
-              end: _bottomAlignmentAnimation.value,
+              stops: const [0.2, 1.0], // Reduced white area to let blue creep up slightly
             ),
           ),
           child: widget.child,

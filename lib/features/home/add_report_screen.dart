@@ -5,6 +5,7 @@ import '../../widgets/custom_text_field.dart';
 import '../../core/services/firestore_service.dart';
 import '../../core/models/models.dart';
 import '../../core/utils/ui_utils.dart';
+import '../../widgets/animated_gradient_bg.dart';
 
 
 class AddReportScreen extends StatefulWidget {
@@ -76,90 +77,186 @@ class _AddReportScreenState extends State<AddReportScreen> {
     final color = isLost ? AppColors.errorRed : AppColors.successGreen;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        forceMaterialTransparency: true,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark, size: 20),
-          onPressed: () => Navigator.pop(context),
+        leading: Container(
+          margin: const EdgeInsets.only(left: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+              ),
+            ],
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textDark, size: 20),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
         title: Text(
           title,
           style: TextStyle(
             color: color,
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: 18,
           ),
         ),
         centerTitle: true,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Placeholder for Image Upload
-              Container(
-                height: 200,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.camera_alt_outlined, size: 48, color: Colors.grey.shade400),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Add Photos',
-                      style: TextStyle(color: Colors.grey.shade500),
+      body: Stack(
+        children: [
+          const AnimatedGradientBg(),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Placeholder for Image Upload
+                  Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white.withOpacity(0.5)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryBlue.withOpacity(0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_a_photo_rounded, size: 48, color: AppColors.primaryBlue.withOpacity(0.5)),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Add Photos',
+                          style: TextStyle(
+                            color: AppColors.textGrey,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  _buildSectionLabel('Item Name'),
+                  _buildGlassTextField(hintText: 'e.g. Blue Backpack', controller: _titleController),
+                  
+                  const SizedBox(height: 16),
+                  
+                  _buildSectionLabel('Category'),
+                  _buildGlassTextField(hintText: 'Select Category', controller: _categoryController),
+
+                  const SizedBox(height: 16),
+                  
+                  _buildSectionLabel('Location'),
+                  _buildGlassTextField(hintText: 'Where was it lost/found?', controller: _locationController),
+
+                  const SizedBox(height: 16),
+                  
+                  _buildSectionLabel('Date & Time'),
+                  _buildGlassTextField(hintText: 'Select Date & Time'), // Date Picker logic needed later
+
+                  const SizedBox(height: 16),
+                  
+                  _buildSectionLabel('Description'),
+                  _buildGlassTextField(
+                    hintText: 'Describe the item...',
+                    maxLines: 4,
+                    controller: _descriptionController,
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _submitReport,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: color,
+                        foregroundColor: Colors.white,
+                        elevation: 8,
+                        shadowColor: color.withOpacity(0.4),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: _isLoading 
+                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text(
+                              'Post Report',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
-              const SizedBox(height: 24),
-
-              const Text('Item Name', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              CustomTextField(hintText: 'e.g. Blue Backpack', controller: _titleController),
-              
-              const SizedBox(height: 16),
-              
-              const Text('Category', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              CustomTextField(hintText: 'Select Category', controller: _categoryController),
-
-              const SizedBox(height: 16),
-              
-              const Text('Location', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              CustomTextField(hintText: 'Where was it lost/found?', controller: _locationController),
-
-              const SizedBox(height: 16),
-              
-              const Text('Date & Time', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const CustomTextField(hintText: 'Select Date & Time'), // Date Picker logic needed later
-
-              const SizedBox(height: 16),
-              
-              const Text('Description', style: TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              CustomTextField(hintText: 'Describe the item...', maxLines: 4, controller: _descriptionController),
-
-              const SizedBox(height: 32),
-
-              CustomButton(
-                text: _isLoading ? 'Posting...' : 'Post Report',
-                onPressed: _isLoading ? () {} : _submitReport,
-                backgroundColor: color,
-              ),
-            ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 4),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: AppColors.textDark,
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGlassTextField({
+    required String hintText,
+    TextEditingController? controller,
+    int maxLines = 1,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        style: const TextStyle(fontWeight: FontWeight.w500),
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(color: AppColors.textGrey.withOpacity(0.6)),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
       ),
     );
