@@ -169,13 +169,15 @@ class LoginScreen extends StatelessWidget {
                     const SizedBox(height: 40),
                     
                     // Register Link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Don't have an account? ",
-                          style: TextStyle(color: AppColors.textDark),
-                        ),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Don't have an account? ",
+                            style: TextStyle(color: AppColors.textDark),
+                          ),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
@@ -193,6 +195,7 @@ class LoginScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                  ),
                     const SizedBox(height: 20),
                   ],
                 ),

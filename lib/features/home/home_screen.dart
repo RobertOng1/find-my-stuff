@@ -327,7 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         MaterialPageRoute(
                                           builder: (context) => ProofFormScreen(
                                             item: ItemModel(
-                                              id: 'mock_item_id_${index}',
+                                              id: 'mock_item_id_$index',
                                               userId: 'mock_finder_id',
                                               title: item['title']!,
                                               description: item['description']!,

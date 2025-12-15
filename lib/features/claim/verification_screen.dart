@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
-import '../../widgets/custom_button.dart';
 import 'verify_proof_screen.dart';
 import 'widgets/claim_rejected_dialog.dart';
 import '../../core/models/models.dart';

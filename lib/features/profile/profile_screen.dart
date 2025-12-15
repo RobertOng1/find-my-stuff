@@ -234,18 +234,18 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Expanded(
+                        const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Blue Backpack',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textDark,
                                 ),
                               ),
-                              const Text(
+                              Text(
                                 'Status: Pending Claim',
                                 style: TextStyle(
                                   fontSize: 12,
