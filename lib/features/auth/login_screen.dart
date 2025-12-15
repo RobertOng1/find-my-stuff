@@ -6,9 +6,80 @@ import '../../widgets/social_login_button.dart';
 import '../../widgets/auth_background_painters.dart';
 import 'register_screen.dart';
 import '../home/main_screen.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/utils/ui_utils.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+
+  Future<void> _handleLogin() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      UiUtils.showModernSnackBar(context, 'Please fill in all fields',
+          isSuccess: false);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.signInWithEmailAndPassword(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        UiUtils.showModernSnackBar(context, 'Login Failed: ${e.toString()}',
+            isSuccess: false);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+    try {
+      final userCred = await _authService.signInWithGoogle();
+      if (userCred != null && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        UiUtils.showModernSnackBar(
+            context, 'Google Login Failed: ${e.toString()}',
+            isSuccess: false);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,13 +133,14 @@ class LoginScreen extends StatelessWidget {
                         ],
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: AppColors.primaryBlue),
-                        onPressed: () {},
+                        icon: const Icon(Icons.arrow_back_ios_new,
+                            size: 20, color: AppColors.primaryBlue),
+                        onPressed: () => Navigator.pop(context),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Glassmorphism Card
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -90,7 +162,10 @@ class LoginScreen extends StatelessWidget {
                           // Title
                           Text(
                             'Welcome back!',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textDark,
                                   height: 1.2,
@@ -99,30 +174,37 @@ class LoginScreen extends StatelessWidget {
                           const SizedBox(height: 8),
                           Text(
                             'Enter your details to sign in',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
                                   color: AppColors.textGrey,
                                 ),
                           ),
-                          
+
                           const SizedBox(height: 32),
-                          
+
                           // Form
-                          const CustomTextField(
+                          CustomTextField(
+                            controller: _emailController,
                             hintText: 'Email',
                             labelText: 'Email Address',
                             keyboardType: TextInputType.emailAddress,
-                            prefixIcon: Icon(Icons.email_outlined, size: 20),
+                            prefixIcon:
+                                const Icon(Icons.email_outlined, size: 20),
                           ),
                           const SizedBox(height: 20),
-                          const CustomTextField(
+                          CustomTextField(
+                            controller: _passwordController,
                             hintText: 'Password',
                             labelText: 'Password',
                             isPassword: true,
-                            prefixIcon: Icon(Icons.lock_outline, size: 20),
+                            prefixIcon:
+                                const Icon(Icons.lock_outline, size: 20),
                           ),
-                          
+
                           const SizedBox(height: 12),
-                          
+
                           // Forgot Password
                           Align(
                             alignment: Alignment.centerRight,
@@ -137,25 +219,24 @@ class LoginScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // Login Button
-                          CustomButton(
-                            text: 'Login',
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(builder: (context) => const MainScreen()),
-                              );
-                            },
-                          ),
+                          _isLoading
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                      color: AppColors.primaryBlue))
+                              : CustomButton(
+                                  text: 'Login',
+                                  onPressed: _handleLogin,
+                                ),
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Or Login with
                     const Row(
                       children: [
@@ -173,48 +254,41 @@ class LoginScreen extends StatelessWidget {
                         Expanded(child: Divider(color: Color(0xFFE8ECF4))),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Social Buttons
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
+                        SizedBox(
+                          width: size.width * 0.8,
                           child: SocialLoginButton(
-                            icon: Icons.facebook,
-                            color: const Color(0xFF1877F2),
-                            onPressed: () {},
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: SocialLoginButton(
-                            icon: Icons.g_mobiledata, // Placeholder for Google
+                            icon: Icons.g_mobiledata,
                             color: const Color(0xFFDB4437),
-                            onPressed: () {},
+                            onPressed: _handleGoogleLogin,
+                            text: 'Continue with Google',
                           ),
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Register Link
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Don't have an account? ",
-                            style: TextStyle(color: AppColors.textDark),
-                          ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Don't have an account? ",
+                          style: TextStyle(color: AppColors.textDark),
+                        ),
                         GestureDetector(
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                              MaterialPageRoute(
+                                  builder: (context) => const RegisterScreen()),
                             );
                           },
                           child: const Text(
@@ -227,7 +301,6 @@ class LoginScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
                     const SizedBox(height: 20),
                   ],
                 ),

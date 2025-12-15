@@ -4,9 +4,92 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../../widgets/social_login_button.dart';
 import '../../widgets/auth_background_painters.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/utils/ui_utils.dart';
+import '../home/main_screen.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+
+  Future<void> _handleRegister() async {
+    if (_usernameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
+      UiUtils.showModernSnackBar(context, 'Please fill in all fields', isSuccess: false);
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      UiUtils.showModernSnackBar(context, 'Passwords do not match', isSuccess: false);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.registerWithEmailAndPassword(
+        _emailController.text.trim(),
+        _passwordController.text,
+        _usernameController.text.trim(),
+      );
+
+      if (mounted) {
+        UiUtils.showModernSnackBar(context, 'Account created successfully!');
+        // Navigate to MainScreen directly after registration
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        UiUtils.showModernSnackBar(context, 'Registration Failed: ${e.toString()}', isSuccess: false);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleGoogleRegister() async {
+     setState(() => _isLoading = true);
+    try {
+      final userCred = await _authService.signInWithGoogle();
+      if (userCred != null && mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        UiUtils.showModernSnackBar(context, 'Google Sign-In Failed: ${e.toString()}', isSuccess: false);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,40 +182,46 @@ class RegisterScreen extends StatelessWidget {
                           const SizedBox(height: 32),
                           
                           // Form
-                          const CustomTextField(
+                          CustomTextField(
+                            controller: _usernameController,
                             hintText: 'Username',
                             labelText: 'Username',
-                            prefixIcon: Icon(Icons.person_outline, size: 20),
+                            prefixIcon: const Icon(Icons.person_outline, size: 20),
                           ),
                           const SizedBox(height: 16),
-                          const CustomTextField(
+                          CustomTextField(
+                            controller: _emailController,
                             hintText: 'Email',
                             labelText: 'Email Address',
                             keyboardType: TextInputType.emailAddress,
-                            prefixIcon: Icon(Icons.email_outlined, size: 20),
+                            prefixIcon: const Icon(Icons.email_outlined, size: 20),
                           ),
                           const SizedBox(height: 16),
-                          const CustomTextField(
+                          CustomTextField(
+                            controller: _passwordController,
                             hintText: 'Password',
                             labelText: 'Password',
                             isPassword: true,
-                            prefixIcon: Icon(Icons.lock_outline, size: 20),
+                            prefixIcon: const Icon(Icons.lock_outline, size: 20),
                           ),
                           const SizedBox(height: 16),
-                          const CustomTextField(
+                          CustomTextField(
+                            controller: _confirmPasswordController,
                             hintText: 'Confirm password',
                             labelText: 'Confirm Password',
                             isPassword: true,
-                            prefixIcon: Icon(Icons.lock_reset, size: 20),
+                            prefixIcon: const Icon(Icons.lock_reset, size: 20),
                           ),
                           
                           const SizedBox(height: 32),
                           
                           // Register Button
-                          CustomButton(
-                            text: 'Register',
-                            onPressed: () {},
-                          ),
+                          _isLoading
+                              ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
+                              : CustomButton(
+                                  text: 'Register',
+                                  onPressed: _handleRegister,
+                                ),
                         ],
                       ),
                     ),
@@ -161,21 +250,15 @@ class RegisterScreen extends StatelessWidget {
                     
                     // Social Buttons
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: SocialLoginButton(
-                            icon: Icons.facebook,
-                            color: const Color(0xFF1877F2),
-                            onPressed: () {},
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
+                        SizedBox(
+                          width: size.width * 0.8,
                           child: SocialLoginButton(
                             icon: Icons.g_mobiledata,
                             color: const Color(0xFFDB4437),
-                            onPressed: () {},
+                            onPressed: _handleGoogleRegister,
+                            text: 'Continue with Google',
                           ),
                         ),
                       ],
@@ -205,6 +288,7 @@ class RegisterScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),

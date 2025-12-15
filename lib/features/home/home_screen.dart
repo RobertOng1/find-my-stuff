@@ -5,6 +5,7 @@ import '../../widgets/lost_item_card.dart';
 import '../chat/chat_screen.dart';
 import '../claim/proof_form_screen.dart';
 import 'add_report_screen.dart';
+import '../../core/services/firestore_service.dart';
 import '../../core/models/models.dart';
 import '../../widgets/animated_gradient_bg.dart';
 
@@ -16,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final FirestoreService _firestoreService = FirestoreService(); // Init Service
   int _selectedCategoryIndex = 0;
   String _selectedLocation = 'All';
   final TextEditingController _searchController = TextEditingController();
@@ -23,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isFoundTabActive = true; // Toggle state
 
   final List<Map<String, dynamic>> _categories = [
+    {'title': 'All', 'icon': Icons.grid_view},
     {'title': 'Electronics', 'icon': Icons.devices},
     {'title': 'Water Bottle', 'icon': Icons.water_drop},
     {'title': 'Accessory', 'icon': Icons.watch},
@@ -30,52 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
     {'title': 'Wallet', 'icon': Icons.account_balance_wallet},
   ];
 
-  // Mock Data
-  final List<Map<String, dynamic>> _allLostItems = [
-    {
-      'title': 'Blue Backpack',
-      'description': 'Old, slightly dirty polo beach backpack',
-      'location': 'Hj. Anif Joint Lecture Building',
-      'type': 'FOUND',
-    },
-    {
-      'title': 'iPhone 13 Pro',
-      'description': 'Black case with a sticker on the back',
-      'location': 'Library, 2nd Floor',
-      'type': 'LOST',
-    },
-    {
-      'title': 'Water Bottle',
-      'description': 'Tupperware brand, blue color',
-      'location': 'Canteen',
-      'type': 'FOUND',
-    },
-    {
-      'title': 'Brown Wallet',
-      'description': 'Leather wallet with ID card',
-      'location': 'Parking Lot',
-      'type': 'LOST',
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
-    // Filter items based on search query, location, and TOGGLE STATE
-    final filteredItems = _allLostItems.where((item) {
-      final title = item['title']!.toLowerCase();
-      final location = item['location']!.toLowerCase();
-      final query = _searchQuery.toLowerCase();
-      final type = item['type'];
-      
-      final matchesSearch = title.contains(query) || location.contains(query);
-      final matchesLocation = _selectedLocation == 'All' || item['location']!.contains(_selectedLocation.split(' ')[0]);
-      
-      // Toggle Logic
-      final matchesType = _isFoundTabActive ? type == 'FOUND' : type == 'LOST';
-
-      return matchesSearch && matchesLocation && matchesType;
-    }).toList();
-
+    // Logic moved to StreamBuilder
+    
     return Scaffold(
       extendBodyBehindAppBar: true, // Allow body to extend behind
       body: AnimatedGradientBg(
@@ -295,79 +256,100 @@ class _HomeScreenState extends State<HomeScreen> {
                     topRight: Radius.circular(30),
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24.0),
-                      child: Text(
-                        _isFoundTabActive ? 'Found Items' : 'Lost Reports',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
+                child: StreamBuilder<List<ItemModel>>(
+                  stream: _firestoreService.getFeedItems(_isFoundTabActive ? 'FOUND' : 'LOST'),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
+
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue));
+                    }
+
+                    final items = snapshot.data ?? [];
+                    
+                    // Filter items based on search query, location, and category
+                    final filteredItems = items.where((item) {
+                      final title = item.title.toLowerCase();
+                      final location = item.location.toLowerCase();
+                      final query = _searchQuery.toLowerCase();
+                      
+                      final matchesSearch = title.contains(query) || location.contains(query);
+                      final matchesLocation = _selectedLocation == 'All' || item.location.contains(_selectedLocation.split(' ')[0]);
+                      
+                      // Category Filter
+                      final selectedCategory = _categories[_selectedCategoryIndex]['title'];
+                      final matchesCategory = selectedCategory == 'All' || item.category == selectedCategory;
+                      
+                      return matchesSearch && matchesLocation && matchesCategory;
+                    }).toList();
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 24.0),
+                          child: Text(
+                            _isFoundTabActive ? 'Found Items' : 'Lost Reports',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Expanded(
-                      child: filteredItems.isEmpty
-                          ? _buildEmptyState()
-                          : ListView.builder(
-                              itemCount: filteredItems.length,
-                              itemBuilder: (context, index) {
-                                final item = filteredItems[index];
-                                final isLostItem = item['type'] == 'LOST';
-                                
-                                return LostItemCard(
-                                  title: item['title']!,
-                                  description: item['description']!,
-                                  location: item['location']!,
-                                  imageUrl: 'assets/images/logo.png',
-                                  isLost: isLostItem,
-                                  onChatPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ChatScreen(itemName: item['title']!),
-                                      ),
+                        Expanded(
+                          child: filteredItems.isEmpty
+                              ? _buildEmptyState()
+                              : ListView.builder(
+                                  itemCount: filteredItems.length,
+                                  itemBuilder: (context, index) {
+                                    final item = filteredItems[index];
+                                    final isLostItem = item.type == 'LOST';
+                                    
+                                    return LostItemCard(
+                                      title: item.title,
+                                      description: item.description,
+                                      location: item.location,
+                                      imageUrl: item.imageUrl.isNotEmpty ? item.imageUrl : 'assets/images/logo.png', // Fallback image
+                                      isLost: isLostItem,
+                                      onChatPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => ChatScreen(itemName: item.title),
+                                          ),
+                                        );
+                                      },
+                                      onClaimPressed: () {
+                                        if (isLostItem) {
+                                          // Logic for "I Found It" - Go to Chat for now
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => ChatScreen(itemName: item.title),
+                                            ),
+                                          );
+                                        } else {
+                                          // Logic for "Claim"
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => ProofFormScreen(
+                                                item: item,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      },
                                     );
                                   },
-                                  onClaimPressed: () {
-                                    if (isLostItem) {
-                                      // Logic for "I Found It" - Go to Chat for now
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ChatScreen(itemName: item['title']!),
-                                        ),
-                                      );
-                                    } else {
-                                      // Logic for "Claim"
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ProofFormScreen(
-                                            item: ItemModel(
-                                              id: 'mock_item_id_$index',
-                                              userId: 'mock_finder_id',
-                                              title: item['title']!,
-                                              description: item['description']!,
-                                              location: item['location']!,
-                                              imageUrl: 'assets/images/logo.png',
-                                              type: item['type']!,
-                                              category: 'General',
-                                              date: DateTime.now(),
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                );
-                              },
-                            ),
-                    ),
-                  ],
+                                ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),

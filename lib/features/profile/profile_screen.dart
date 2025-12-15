@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/auth_service.dart';
+import '../auth/login_screen.dart';
 
 import 'edit_profile_screen.dart';
 import 'change_password_screen.dart';
@@ -336,6 +338,17 @@ class ProfileScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(builder: (context) => const ChangePasswordScreen()),
                     );
+                  }),
+                  const SizedBox(height: 12),
+                  _buildSettingsButton(context, 'Logout', Icons.logout, () async {
+                    await AuthService().signOut();
+                     if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    }
                   }),
                   const SizedBox(height: 24),
                   
