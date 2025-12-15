@@ -6,6 +6,7 @@ class StatusItemCard extends StatelessWidget {
   final String imageUrl;
   final String status;
   final String statusType; // 'pending', 'done', 'rejected', 'accepted'
+  final String type; // 'LOST' or 'FOUND'
   final bool isClaimedTab;
   final VoidCallback onActionPressed;
 
@@ -15,6 +16,7 @@ class StatusItemCard extends StatelessWidget {
     required this.imageUrl,
     required this.status,
     required this.statusType,
+    required this.type,
     required this.isClaimedTab,
     required this.onActionPressed,
   });
@@ -57,11 +59,15 @@ class StatusItemCard extends StatelessWidget {
         case 'done':
         default:
           statusColor = AppColors.successGreen;
-          buttonLabel = 'Claimed';
+          buttonLabel = 'Done'; // Changed from 'Claimed' to 'Done' for clarity
           buttonColor = AppColors.primaryBlue;
           break;
       }
     }
+
+    final isLostType = type == 'LOST';
+    final typeColor = isLostType ? const Color(0xFFFFA000) : AppColors.successGreen;
+    final typeLabel = isLostType ? 'LOST' : 'FOUND';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -88,7 +94,9 @@ class StatusItemCard extends StatelessWidget {
               shape: BoxShape.circle,
               color: Colors.grey.shade100,
               image: DecorationImage(
-                image: AssetImage(imageUrl),
+                image: imageUrl.startsWith('http') || imageUrl.startsWith('assets') 
+                    ? (imageUrl.startsWith('http') ? NetworkImage(imageUrl) : AssetImage(imageUrl)) as ImageProvider
+                    : const AssetImage('assets/images/logo.png'),
                 fit: BoxFit.cover,
               ),
               border: Border.all(color: Colors.white, width: 2),
@@ -107,22 +115,47 @@ class StatusItemCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
-                    letterSpacing: 0.3,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: typeColor),
+                      ),
+                      child: Text(
+                        typeLabel,
+                        style: TextStyle(
+                            fontSize: 10, 
+                            fontWeight: FontWeight.bold, 
+                            color: typeColor
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: statusColor.withOpacity(0.2)),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: statusColor.withOpacity(0.3)),
                   ),
                   child: Text(
                     status,
@@ -136,6 +169,7 @@ class StatusItemCard extends StatelessWidget {
               ],
             ),
           ),
+
           
           // Action Button
           const SizedBox(width: 8),

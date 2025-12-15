@@ -126,8 +126,8 @@ class LostItemCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: onChatPressed,
-                          icon: const Icon(Icons.chat_bubble_outline, size: 14),
+                          onPressed: onClaimPressed,
+                          icon: const Icon(Icons.check_circle_outline, size: 14),
                           label: const Text('I Found It', style: TextStyle(fontSize: 12)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.successGreen, // Or Orange as requested

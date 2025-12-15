@@ -3,9 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/chat_service.dart';
 import '../../core/services/auth_service.dart';
-import '../claim/proof_form_screen.dart';
+import '../claim/submit_proof_screen.dart';
 import '../claim/claim_accepted_screen.dart';
 import '../claim/widgets/claim_rejected_dialog.dart';
+import '../claim/verification_screen.dart'; // VerifyClaimantScreen
 import '../../core/models/models.dart';
 import '../../core/services/firestore_service.dart';
 import 'dart:ui';
@@ -13,6 +14,7 @@ import '../../widgets/animated_gradient_bg.dart';
 
 class ChatScreen extends StatefulWidget {
   final String chatId;
+  final String itemId; // Added itemId
   final String itemName;
   final String otherUserName; // Fallback
   final String otherUserId;
@@ -20,6 +22,7 @@ class ChatScreen extends StatefulWidget {
   const ChatScreen({
     super.key, 
     required this.chatId,
+    required this.itemId, // Required
     required this.itemName,
     this.otherUserName = 'User',
     this.otherUserId = '',
@@ -38,6 +41,7 @@ class _ChatScreenState extends State<ChatScreen> {
   late String currentUserId;
   String? otherUserAvatar;
   String? otherUserName;
+  ClaimModel? _pendingClaim;
 
   @override
   void initState() {
@@ -47,6 +51,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (widget.otherUserId.isNotEmpty) {
       _fetchOtherUserProfile();
     }
+    _checkForPendingClaims();
   }
 
   Future<void> _fetchOtherUserProfile() async {
@@ -57,6 +62,27 @@ class _ChatScreenState extends State<ChatScreen> {
         otherUserName = user.displayName;
       });
     }
+  }
+
+  void _checkForPendingClaims() {
+    // Listen for claims related to this item
+    _firestoreService.getClaimsForItem(widget.itemId).listen((claims) {
+      if (!mounted) return;
+      
+      // Find a pending claim where I am the finder (the one verifying)
+      try {
+        final claim = claims.firstWhere((c) => 
+          c.status == 'PENDING' && c.finderId == currentUserId
+        );
+        setState(() {
+          _pendingClaim = claim;
+        });
+      } catch (e) {
+        setState(() {
+          _pendingClaim = null;
+        });
+      }
+    });
   }
 
   void _sendMessage() {
@@ -117,39 +143,52 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
               ],
             ),
-            const SizedBox(width: 8),
           ],
         ),
         actions: [
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.bug_report, color: Colors.orange),
-            onSelected: (value) {
-              if (value == 'accepted') {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ClaimAcceptedScreen(
-                    chatId: widget.chatId,
-                    itemName: widget.itemName,
-                  )),
-                );
-              } else if (value == 'rejected') {
-                showDialog(
-                  context: context,
-                  builder: (context) => const ClaimRejectedDialog(),
-                );
-              }
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'accepted',
-                child: Text('Simulate: Claim Accepted'),
+            if (_pendingClaim != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: ElevatedButton(
+                onPressed: () async {
+                   // Show loading indicator
+                   showDialog(
+                     context: context,
+                     barrierDismissible: false,
+                     builder: (context) => const Center(child: CircularProgressIndicator()),
+                   );
+
+                   final item = await _firestoreService.getItem(widget.itemId);
+                   
+                   if (context.mounted) {
+                     Navigator.pop(context); // Dismiss loading
+                     
+                     if (item != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => VerificationScreen(
+                              claim: _pendingClaim!,
+                              item: item,
+                            ),
+                          ),
+                        );
+                     } else {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         const SnackBar(content: Text('Error loading item details')),
+                       );
+                     }
+                   }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+                child: const Text('Review Claim'),
               ),
-              const PopupMenuItem<String>(
-                value: 'rejected',
-                child: Text('Simulate: Claim Rejected'),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
       body: Stack(

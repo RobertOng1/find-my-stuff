@@ -6,8 +6,8 @@ import '../../core/services/auth_service.dart';
 import '../../widgets/category_card.dart';
 import '../../widgets/lost_item_card.dart';
 import '../chat/chat_screen.dart';
-import '../claim/proof_form_screen.dart';
-import 'add_report_screen.dart';
+import '../claim/submit_proof_screen.dart';
+import 'create_report_screen.dart';
 import '../../core/services/firestore_service.dart';
 import '../../core/models/models.dart';
 import '../../widgets/animated_gradient_bg.dart';
@@ -344,6 +344,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               MaterialPageRoute(
                                                 builder: (context) => ChatScreen(
                                                   chatId: chatId,
+                                                  itemId: item.id,
                                                   itemName: item.title,
                                                   otherUserId: item.userId,
                                                 ),
@@ -352,9 +353,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                           }
                                       },
                                       onClaimPressed: () {
-                                        if (isLostItem) {
-                                          // Logic for "I Found It" - Go to Chat for now
-                                          // Same chat logic as above
                                           final currentUser = AuthService().currentUser;
                                           if (currentUser == null) {
                                              UiUtils.showModernSnackBar(context, 'Please login to contact owner', isSuccess: false);
@@ -364,38 +362,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                             UiUtils.showModernSnackBar(context, 'This is your own post', isSuccess: false);
                                             return;
                                           }
-                                          // Initiating chat from "I Found It" perspective
-                                          FirestoreService().createChat(
-                                            itemId: item.id,
-                                            itemName: item.title,
-                                            claimantId: currentUser.uid, // The one finding it acts as initiator
-                                            finderId: item.userId, // The original poster (owner)
-                                          ).then((chatId) {
-                                            if (context.mounted) {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) => ChatScreen(
-                                                    chatId: chatId,
-                                                    itemName: item.title,
-                                                    otherUserId: item.userId,
-                                                  ),
-                                                ),
-                                              );
-                                            }
-                                          });
-
-                                        } else {
-                                          // Logic for "Claim" - Navigate to ProofForm
-                                           Navigator.push(
+                                          
+                                          // Navigate to ProofFormScreen
+                                          // If item is LOST -> I found it -> isFoundReport = true
+                                          // If item is FOUND -> I claim it -> isFoundReport = false
+                                          Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) => ProofFormScreen(
                                                 item: item,
+                                                isFoundReport: isLostItem,
                                               ),
                                             ),
                                           );
-                                        }
                                       },
                                     );
                                   },

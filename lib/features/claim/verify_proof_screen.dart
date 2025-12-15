@@ -100,12 +100,7 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          widget.item.imageUrl,
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
-                        ),
+                        child: _buildImage(widget.item.imageUrl, width: 60, height: 60),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -165,7 +160,7 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
                     children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundImage: AssetImage(widget.claim.claimantAvatar),
+                        backgroundImage: _getImageProvider(widget.claim.claimantAvatar),
                       ),
                       const SizedBox(width: 12),
                       Column(
@@ -248,10 +243,10 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
                         itemBuilder: (context, index) {
                           return ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              widget.claim.proofImages[index],
-                              fit: BoxFit.cover,
-                            ),
+                              child: _buildImage(
+                                widget.claim.proofImages[index],
+                                fit: BoxFit.cover,
+                              ),
                           );
                         },
                       ),
@@ -369,5 +364,29 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
         ],
       ),
     );
+  }
+  Widget _buildImage(String url, {double? width, double? height, BoxFit fit = BoxFit.cover}) {
+    if (url.isEmpty) {
+      return Container(
+        width: width,
+        height: height,
+        color: Colors.grey.shade200,
+        child: const Icon(Icons.image, color: Colors.grey),
+      );
+    }
+    if (url.startsWith('http')) {
+      return Image.network(url, width: width, height: height, fit: fit, errorBuilder: (context, error, stackTrace) {
+          return Container(width: width, height: height, color: Colors.grey.shade200, child: const Icon(Icons.broken_image, color: Colors.grey));
+      });
+    }
+    return Image.asset(url, width: width, height: height, fit: fit, errorBuilder: (context, error, stackTrace) {
+           return Container(width: width, height: height, color: Colors.grey.shade200, child: const Icon(Icons.broken_image, color: Colors.grey));
+    });
+  }
+
+  ImageProvider _getImageProvider(String url) {
+    if (url.isEmpty) return const AssetImage('assets/images/logo.png');
+    if (url.startsWith('http')) return NetworkImage(url);
+    return AssetImage(url);
   }
 }

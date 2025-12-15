@@ -6,11 +6,13 @@ import '../chat/chat_screen.dart';
 class ClaimAcceptedScreen extends StatelessWidget {
   final String chatId;
   final String itemName;
+  final String itemId;
 
   const ClaimAcceptedScreen({
     super.key,
     required this.chatId,
     required this.itemName,
+    required this.itemId,
   });
 
   @override
@@ -100,6 +102,7 @@ class ClaimAcceptedScreen extends StatelessWidget {
                         builder: (context) => ChatScreen(
                           chatId: chatId,
                           itemName: itemName,
+                          itemId: itemId,
                         ),
                       ),
                     );

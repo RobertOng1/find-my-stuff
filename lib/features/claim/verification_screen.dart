@@ -3,12 +3,57 @@ import '../../core/theme/app_colors.dart';
 import 'verify_proof_screen.dart';
 import 'widgets/claim_rejected_dialog.dart';
 import '../../core/models/models.dart';
+import '../../core/services/firestore_service.dart';
 
-class VerificationScreen extends StatelessWidget {
-  const VerificationScreen({super.key});
+class VerificationScreen extends StatefulWidget { // Renamed logically to VerifyClaimantScreen but keeping file name
+  final ClaimModel claim;
+  final ItemModel item;
+
+  const VerificationScreen({
+    super.key,
+    required this.claim,
+    required this.item,
+  });
+
+  @override
+  State<VerificationScreen> createState() => _VerificationScreenState();
+}
+
+class _VerificationScreenState extends State<VerificationScreen> {
+  final FirestoreService _firestoreService = FirestoreService();
+  UserModel? _claimant;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchClaimantData();
+  }
+
+  Future<void> _fetchClaimantData() async {
+    final user = await _firestoreService.getUser(widget.claim.claimantId);
+    if (mounted) {
+      setState(() {
+        _claimant = user;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+      );
+    }
+
+    // Fallback if user load fails
+    final displayName = _claimant?.displayName ?? 'Unknown User';
+    final email = _claimant?.email ?? 'No email';
+    final photoUrl = _claimant?.photoUrl ?? '';
+    final trustScore = ((_claimant?.trustScore ?? 0) * 100).toInt();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -45,25 +90,33 @@ class VerificationScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: Colors.grey.shade200,
                             borderRadius: BorderRadius.circular(8),
-                            image: const DecorationImage(
-                              image: AssetImage('assets/images/logo.png'), // Placeholder
-                              fit: BoxFit.cover,
-                            ),
+                            image: widget.item.imageUrl.isNotEmpty 
+                                ? DecorationImage(image: NetworkImage(widget.item.imageUrl), fit: BoxFit.cover)
+                                : null,
                           ),
+                          child: widget.item.imageUrl.isEmpty 
+                              ? const Icon(Icons.image, color: Colors.grey)
+                              : null,
                         ),
                         const SizedBox(width: 12),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Blue Backpack',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark),
-                            ),
-                            Text(
-                              'Found in University Library',
-                              style: TextStyle(fontSize: 12, color: AppColors.textGrey),
-                            ),
-                          ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.item.title,
+                                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                'Found in ${widget.item.location}',
+                                style: const TextStyle(fontSize: 12, color: AppColors.textGrey),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -88,9 +141,11 @@ class VerificationScreen extends StatelessWidget {
                         children: [
                           Row(
                             children: [
-                              const CircleAvatar(
+                               CircleAvatar(
                                 radius: 24,
-                                backgroundImage: AssetImage('assets/images/logo.png'), // Placeholder
+                                backgroundImage: photoUrl.isNotEmpty 
+                                    ? NetworkImage(photoUrl)
+                                    : const AssetImage('assets/images/logo.png') as ImageProvider,
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -99,9 +154,12 @@ class VerificationScreen extends StatelessWidget {
                                   children: [
                                     Row(
                                       children: [
-                                        const Text(
-                                          'Farras Prasetya',
-                                          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark),
+                                        Expanded(
+                                          child: Text(
+                                            displayName,
+                                            style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
                                         const SizedBox(width: 4),
                                         Container(
@@ -117,9 +175,10 @@ class VerificationScreen extends StatelessWidget {
                                         ),
                                       ],
                                     ),
-                                    const Text(
-                                      '@farrasonly',
-                                      style: TextStyle(fontSize: 12, color: AppColors.textGrey),
+                                    Text(
+                                      email,
+                                      style: const TextStyle(fontSize: 12, color: AppColors.textGrey),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),
@@ -131,11 +190,11 @@ class VerificationScreen extends StatelessWidget {
                           // Stats
                           Row(
                             children: [
-                              _buildStatBadge(Icons.star, '4.8', 'Rating', const Color(0xFFE3F2FD), const Color(0xFF64B5F6)),
+                              _buildStatBadge(Icons.shield_outlined, '$trustScore%', 'Trust Score', const Color(0xFFE3F2FD), const Color(0xFF64B5F6)),
                               const SizedBox(width: 8),
-                              _buildStatBadge(Icons.check_circle, '39', 'Returns', const Color(0xFFE8F5E9), const Color(0xFF81C784)),
+                              _buildStatBadge(Icons.check_circle_outline, '${_claimant?.points ?? 0}', 'Points', const Color(0xFFE8F5E9), const Color(0xFF81C784)),
                               const SizedBox(width: 8),
-                              _buildStatBadge(Icons.emoji_events, 'Level 2', 'Member', const Color(0xFFFFF3E0), const Color(0xFFFFB74D)),
+                              _buildStatBadge(Icons.emoji_events_outlined, '${_claimant?.badges.length ?? 0}', 'Badges', const Color(0xFFFFF3E0), const Color(0xFFFFB74D)),
                             ],
                           ),
                           
@@ -143,11 +202,9 @@ class VerificationScreen extends StatelessWidget {
                           const Divider(),
                           const SizedBox(height: 8),
                           
-                          _buildVerificationRow(Icons.email_outlined, 'Email Verified', true),
+                          _buildVerificationRow(Icons.email_outlined, 'Email Verified', true), // Mock for now
                           const SizedBox(height: 8),
-                          _buildVerificationRow(Icons.phone_outlined, 'Phone Verified', true),
-                          const SizedBox(height: 8),
-                          _buildVerificationRow(Icons.badge_outlined, 'ID Verified', true),
+                          _buildVerificationRow(Icons.phone_outlined, 'Phone Verified', false), // Mock
                           
                           const SizedBox(height: 16),
                           Container(
@@ -162,7 +219,7 @@ class VerificationScreen extends StatelessWidget {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'High Trust Score\nThis user has a verified account with excellent history.',
+                                    'Safe to interact\nUser has a good reputation history.',
                                     style: TextStyle(fontSize: 10, color: Colors.green.shade800),
                                   ),
                                 ),
@@ -174,79 +231,6 @@ class VerificationScreen extends StatelessWidget {
                     ),
 
                     const SizedBox(height: 24),
-
-                    // Claim Details Card
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Claim Details',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildDetailRow('Item Name', 'Blue Backpack', 'Blue Backpack'),
-                          const Divider(height: 24),
-                          _buildDetailRow('Location', 'Library', 'University Library'),
-                          const Divider(height: 24),
-                          _buildDetailRow('Date Lost', '11/21/2025', '11/21/2025'),
-                          const Divider(height: 24),
-                          const Text(
-                            'Distinguishing Features',
-                            style: TextStyle(fontSize: 12, color: AppColors.textGrey),
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Navy blue with red zipper pulls. Has a small tear on the bottom left pocket...',
-                            style: TextStyle(fontSize: 14, color: AppColors.textDark),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Proof Photos
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Proof Photos',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        crossAxisSpacing: 8,
-                        mainAxisSpacing: 8,
-                        childAspectRatio: 1,
-                      ),
-                      itemCount: 3,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(8),
-                            image: const DecorationImage(
-                              image: AssetImage('assets/images/logo.png'), // Placeholder
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
                   ],
                 ),
               ),
@@ -271,45 +255,20 @@ class VerificationScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Reject Claimant'),
+                      child: const Text('Reject'),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
+                        // Navigate to PROOF
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => VerifyProofScreen(
-                              item: ItemModel(
-                                id: '1',
-                                userId: 'finder_123',
-                                title: 'Blue Backpack',
-                                description: 'Old, slightly dirty polo beach backpack',
-                                location: 'University Library',
-                                imageUrl: 'assets/images/logo.png',
-                                type: 'LOST',
-                                category: 'Bags',
-                                date: DateTime.now(),
-                              ),
-                              claim: ClaimModel(
-                                id: '1',
-                                itemId: '1',
-                                claimantId: 'claimant_456',
-                                finderId: 'finder_123',
-                                claimantName: 'Farras Prasetya',
-                                claimantAvatar: 'assets/images/logo.png',
-                                status: 'PENDING',
-                                proofDescription: 'Navy blue with red zipper pulls. Has a small tear on the bottom left pocket. Contains a physics textbook and a water bottle with a green lid.',
-                                proofImages: [
-                                  'assets/images/logo.png',
-                                  'assets/images/logo.png',
-                                  'assets/images/logo.png',
-                                  'assets/images/logo.png',
-                                ],
-                                timestamp: DateTime.now(),
-                              ),
+                              item: widget.item,
+                              claim: widget.claim,
                             ),
                           ),
                         );
@@ -321,7 +280,7 @@ class VerificationScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
-                      child: const Text('Accept Claim'),
+                      child: const Text('View Proof'),
                     ),
                   ),
                 ],
@@ -370,33 +329,11 @@ class VerificationScreen extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: AppColors.textDark),
           ),
         ),
-        if (isVerified)
-          const Icon(Icons.check_circle, size: 16, color: AppColors.successGreen),
-      ],
-    );
-  }
-
-  Widget _buildDetailRow(String label, String claimedValue, String actualValue) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(fontSize: 12, color: AppColors.textGrey),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                claimedValue,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textDark),
-              ),
-            ],
-          ),
+        Icon(
+          isVerified ? Icons.check_circle : Icons.cancel, 
+          size: 16, 
+          color: isVerified ? AppColors.successGreen : Colors.grey.shade400
         ),
-        // Optional: Show comparison if needed, for now just showing the claimed value
       ],
     );
   }

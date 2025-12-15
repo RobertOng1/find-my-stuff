@@ -37,6 +37,19 @@ class FirestoreService {
     }
   }
 
+  Future<ItemModel?> getItem(String itemId) async {
+    try {
+      final doc = await _db.collection('posts').doc(itemId).get();
+      if (doc.exists) {
+        return ItemModel.fromJson(doc.data()!, doc.id);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting item: $e');
+      return null;
+    }
+  }
+
   // --- Claims ---
 
   Future<void> submitClaim(ClaimModel claim) async {
@@ -52,7 +65,7 @@ class FirestoreService {
     return _db
         .collection('claims')
         .where('claimantId', isEqualTo: userId)
-        .orderBy('timestamp', descending: true)
+        //.orderBy('timestamp', descending: true) // Removed to avoid index issues for now
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => ClaimModel.fromJson(doc.data(), doc.id))
@@ -63,7 +76,7 @@ class FirestoreService {
     return _db
         .collection('claims')
         .where('itemId', isEqualTo: itemId)
-        .orderBy('timestamp', descending: true)
+        //.orderBy('timestamp', descending: true) // Removed to avoid index issues for now
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => ClaimModel.fromJson(doc.data(), doc.id))
@@ -126,6 +139,17 @@ class FirestoreService {
         .where('status', isEqualTo: 'OPEN') // Only active items
         .orderBy('date', descending: true)
         .limit(5)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ItemModel.fromJson(doc.data(), doc.id))
+            .toList());
+  }
+
+  Stream<List<ItemModel>> getUserPosts(String userId) {
+    return _db
+        .collection('posts')
+        .where('userId', isEqualTo: userId)
+        .orderBy('date', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => ItemModel.fromJson(doc.data(), doc.id))

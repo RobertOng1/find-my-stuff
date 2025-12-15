@@ -4,7 +4,7 @@ import 'home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../status/status_screen.dart';
 import '../message/message_list_screen.dart';
-import 'add_report_screen.dart';
+import 'create_report_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

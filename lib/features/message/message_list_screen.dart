@@ -199,6 +199,7 @@ class _ChatListItem extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) => ChatScreen(
                     chatId: chatData['id'],
+                    itemId: chatData['itemId'] ?? '',
                     itemName: chatData['itemName'] ?? 'Item',
                     otherUserName: otherUser.displayName,
                     otherUserId: otherUser.uid,
