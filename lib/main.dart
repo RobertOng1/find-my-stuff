@@ -1,7 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:find_my_stuff/pages/splash.dart';
+import 'package:find_my_stuff/core/theme/app_theme.dart';
+import 'package:find_my_stuff/features/splash/splash_screen.dart';
 
-void main() {
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print("✅ Firebase Initialized Successfully");
+  } catch (e) {
+    print("❌ Firebase Initialization Failed: $e");
+  }
   runApp(const MyApp());
 }
 
@@ -11,8 +24,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'FindMyStuff',
       debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+      theme: AppTheme.lightTheme,
+      home: const SplashScreen(),
     );
   }
 }
