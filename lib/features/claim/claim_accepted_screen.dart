@@ -4,7 +4,14 @@ import '../../core/utils/ui_utils.dart';
 import '../chat/chat_screen.dart';
 
 class ClaimAcceptedScreen extends StatelessWidget {
-  const ClaimAcceptedScreen({super.key});
+  final String chatId;
+  final String itemName;
+
+  const ClaimAcceptedScreen({
+    super.key,
+    required this.chatId,
+    required this.itemName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +97,10 @@ class ClaimAcceptedScreen extends StatelessWidget {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ChatScreen(itemName: 'Blue Backpack'), // Mock item name
+                        builder: (context) => ChatScreen(
+                          chatId: chatId,
+                          itemName: itemName,
+                        ),
                       ),
                     );
                   },

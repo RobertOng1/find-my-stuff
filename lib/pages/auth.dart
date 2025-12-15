@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:find_my_stuff/pages/navbar.dart';
+import '../core/utils/ui_utils.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -25,16 +26,12 @@ class _AuthPageState extends State<AuthPage> {
     if (email.isEmpty ||
         password.isEmpty ||
         (isSignUp && confirmPassword.isEmpty)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("All fields must be filled!")));
+      UiUtils.showModernSnackBar(context, "All fields must be filled!", isSuccess: false);
       return;
     }
 
     if (isSignUp && password != confirmPassword) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Password does not match!")));
+      UiUtils.showModernSnackBar(context, "Password does not match!", isSuccess: false);
       return;
     }
 

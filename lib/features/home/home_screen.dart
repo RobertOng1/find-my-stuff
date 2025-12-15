@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/services/chat_service.dart';
+import '../../core/services/auth_service.dart';
 import '../../widgets/category_card.dart';
 import '../../widgets/lost_item_card.dart';
 import '../chat/chat_screen.dart';
@@ -8,6 +11,7 @@ import 'add_report_screen.dart';
 import '../../core/services/firestore_service.dart';
 import '../../core/models/models.dart';
 import '../../widgets/animated_gradient_bg.dart';
+import '../../core/utils/ui_utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -314,26 +318,76 @@ class _HomeScreenState extends State<HomeScreen> {
                                       location: item.location,
                                       imageUrl: item.imageUrl.isNotEmpty ? item.imageUrl : 'assets/images/logo.png', // Fallback image
                                       isLost: isLostItem,
-                                      onChatPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => ChatScreen(itemName: item.title),
-                                          ),
+                                      onChatPressed: () async {
+                                        final currentUser = AuthService().currentUser;
+                                        if (currentUser == null) {
+                                          UiUtils.showModernSnackBar(context, 'Please login to chat', isSuccess: false);
+                                          return;
+                                        }
+
+                                        // Prevent chatting with yourself
+                                        if (currentUser.uid == item.userId) {
+                                          UiUtils.showModernSnackBar(context, 'You cannot chat with yourself', isSuccess: false);
+                                          return;
+                                        }
+
+                                        final chatId = await FirestoreService().createChat(
+                                          itemId: item.id,
+                                          itemName: item.title,
+                                          claimantId: currentUser.uid, 
+                                          finderId: item.userId,
                                         );
+
+                                          if (context.mounted) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => ChatScreen(
+                                                  chatId: chatId,
+                                                  itemName: item.title,
+                                                  otherUserId: item.userId,
+                                                ),
+                                              ),
+                                            );
+                                          }
                                       },
                                       onClaimPressed: () {
                                         if (isLostItem) {
                                           // Logic for "I Found It" - Go to Chat for now
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => ChatScreen(itemName: item.title),
-                                            ),
-                                          );
+                                          // Same chat logic as above
+                                          final currentUser = AuthService().currentUser;
+                                          if (currentUser == null) {
+                                             UiUtils.showModernSnackBar(context, 'Please login to contact owner', isSuccess: false);
+                                            return;
+                                          }
+                                           if (currentUser.uid == item.userId) {
+                                            UiUtils.showModernSnackBar(context, 'This is your own post', isSuccess: false);
+                                            return;
+                                          }
+                                          // Initiating chat from "I Found It" perspective
+                                          FirestoreService().createChat(
+                                            itemId: item.id,
+                                            itemName: item.title,
+                                            claimantId: currentUser.uid, // The one finding it acts as initiator
+                                            finderId: item.userId, // The original poster (owner)
+                                          ).then((chatId) {
+                                            if (context.mounted) {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => ChatScreen(
+                                                    chatId: chatId,
+                                                    itemName: item.title,
+                                                    otherUserId: item.userId,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          });
+
                                         } else {
-                                          // Logic for "Claim"
-                                          Navigator.push(
+                                          // Logic for "Claim" - Navigate to ProofForm
+                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) => ProofFormScreen(

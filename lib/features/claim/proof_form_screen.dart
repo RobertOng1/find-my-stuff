@@ -186,9 +186,7 @@ class _ProofFormScreenState extends State<ProofFormScreen> {
                   Center(
                     child: TextButton(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Draft Saved')),
-                        );
+                        UiUtils.showModernSnackBar(context, 'Draft Saved');
                         Navigator.pop(context);
                       },
                       child: const Text(

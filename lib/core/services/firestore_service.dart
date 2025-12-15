@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/models.dart';
+import '../services/chat_service.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -75,6 +76,31 @@ class FirestoreService {
     } catch (e) {
       print('Error updating claim status: $e');
       rethrow;
+    }
+  }
+  Future<String> createChat({
+    required String itemId,
+    required String itemName,
+    required String claimantId,
+    required String finderId,
+  }) {
+    return ChatService().createChat(
+      itemId: itemId, 
+      itemName: itemName, 
+      claimantId: claimantId, 
+      finderId: finderId
+    );
+  }
+  Future<UserModel?> getUser(String userId) async {
+    try {
+      final doc = await _db.collection('users').doc(userId).get();
+      if (doc.exists) {
+        return UserModel.fromJson(doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting user: $e');
+      return null;
     }
   }
 }

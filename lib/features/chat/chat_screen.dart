@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/chat_service.dart';
+import '../../core/services/auth_service.dart';
 import '../claim/proof_form_screen.dart';
 import '../claim/claim_accepted_screen.dart';
 import '../claim/widgets/claim_rejected_dialog.dart';
 import '../../core/models/models.dart';
+import '../../core/services/firestore_service.dart';
 import 'dart:ui';
 import '../../widgets/animated_gradient_bg.dart';
 
 class ChatScreen extends StatefulWidget {
+  final String chatId;
   final String itemName;
+  final String otherUserName; // Fallback
+  final String otherUserId;
 
-  const ChatScreen({super.key, required this.itemName});
+  const ChatScreen({
+    super.key, 
+    required this.chatId,
+    required this.itemName,
+    this.otherUserName = 'User',
+    this.otherUserId = '',
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -18,18 +31,45 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'text': 'Hi! I believe this might be my backpack. Can we verify?',
-      'isMe': true,
-      'time': '10:23 AM',
-    },
-    {
-      'text': 'Sure! Please submit proof of ownership through the claim form.',
-      'isMe': false,
-      'time': '10:24 AM',
-    },
-  ];
+  final ChatService _chatService = ChatService();
+  final AuthService _authService = AuthService();
+  final FirestoreService _firestoreService = FirestoreService();
+  
+  late String currentUserId;
+  String? otherUserAvatar;
+  String? otherUserName;
+
+  @override
+  void initState() {
+    super.initState();
+    currentUserId = _authService.currentUser?.uid ?? '';
+    otherUserName = widget.otherUserName;
+    if (widget.otherUserId.isNotEmpty) {
+      _fetchOtherUserProfile();
+    }
+  }
+
+  Future<void> _fetchOtherUserProfile() async {
+    final user = await _firestoreService.getUser(widget.otherUserId);
+    if (user != null && mounted) {
+      setState(() {
+        otherUserAvatar = user.photoUrl;
+        otherUserName = user.displayName;
+      });
+    }
+  }
+
+  void _sendMessage() {
+    if (_messageController.text.trim().isEmpty) return;
+    
+    _chatService.sendMessage(
+      chatId: widget.chatId,
+      senderId: currentUserId,
+      text: _messageController.text.trim(),
+    );
+    
+    _messageController.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,23 +95,29 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         title: Row(
           children: [
-            Text(
-              widget.itemName,
-              style: const TextStyle(
-                color: AppColors.textDark,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.itemName,
+                  style: const TextStyle(
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                if (otherUserName != null && otherUserName != 'User')
+                  Text(
+                    otherUserName!,
+                    style: TextStyle(
+                      color: AppColors.textGrey,
+                      fontSize: 11,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(width: 8),
-            Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: AppColors.successGreen,
-                shape: BoxShape.circle,
-              ),
-            ),
           ],
         ),
         actions: [
@@ -81,7 +127,10 @@ class _ChatScreenState extends State<ChatScreen> {
               if (value == 'accepted') {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ClaimAcceptedScreen()),
+                  MaterialPageRoute(builder: (context) => ClaimAcceptedScreen(
+                    chatId: widget.chatId,
+                    itemName: widget.itemName,
+                  )),
                 );
               } else if (value == 'rejected') {
                 showDialog(
@@ -111,15 +160,41 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 // Chat List
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      return _buildMessageBubble(
-                        message['text'],
-                        message['isMe'],
-                        message['time'],
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: _chatService.getMessages(widget.chatId),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      }
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      final docs = snapshot.data?.docs ?? [];
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(20),
+                        itemCount: docs.length,
+                        itemBuilder: (context, index) {
+                          final data = docs[index].data() as Map<String, dynamic>;
+                          final isMe = data['senderId'] == currentUserId;
+                          
+                          // Convert timestamp to readable time (simplistic)
+                          // Ideally use intl package for formatting
+                          final Timestamp? timestamp = data['timestamp'];
+                          String timeStr = '';
+                          if (timestamp != null) {
+                             final dt = timestamp.toDate();
+                             timeStr = '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+                          }
+
+                          return _buildMessageBubble(
+                            data['text'] ?? '',
+                            isMe,
+                            timeStr,
+                          );
+                        },
                       );
                     },
                   ),
@@ -167,18 +242,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                         const SizedBox(width: 12),
                         GestureDetector(
-                          onTap: () {
-                            if (_messageController.text.isNotEmpty) {
-                              setState(() {
-                                _messages.add({
-                                  'text': _messageController.text,
-                                  'isMe': true,
-                                  'time': 'Now',
-                                });
-                                _messageController.clear();
-                              });
-                            }
-                          },
+                          onTap: _sendMessage,
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -228,9 +292,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2)),
                   ),
-                  child: const CircleAvatar(
+                  child: CircleAvatar(
                     radius: 16,
-                    backgroundImage: AssetImage('assets/images/logo.png'),
+                    backgroundImage: otherUserAvatar != null && otherUserAvatar!.isNotEmpty 
+                        ? NetworkImage(otherUserAvatar!) 
+                        : const AssetImage('assets/images/logo.png') as ImageProvider,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -275,54 +341,6 @@ class _ChatScreenState extends State<ChatScreen> {
                           height: 1.4,
                         ),
                       ),
-                      if (!isMe && text.contains('submit proof')) ...[
-                        const SizedBox(height: 12),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ProofFormScreen(
-                                  item: ItemModel(
-                                    id: 'dummy_id',
-                                    userId: 'dummy_finder',
-                                    title: widget.itemName,
-                                    description: 'Unknown description',
-                                    location: 'Unknown location',
-                                    imageUrl: 'assets/images/logo.png',
-                                    type: 'LOST',
-                                    category: 'General',
-                                    date: DateTime.now(),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: AppColors.backgroundWhite,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.assignment_outlined, size: 16, color: AppColors.primaryBlue),
-                                const SizedBox(width: 8),
-                                const Text(
-                                  'Fill Claim Form',
-                                  style: TextStyle(
-                                    color: AppColors.primaryBlue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
