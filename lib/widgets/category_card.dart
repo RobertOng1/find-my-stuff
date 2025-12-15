@@ -23,17 +23,18 @@ class CategoryCard extends StatelessWidget {
         width: 80,
         margin: const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryBlue : Colors.white,
+          color: isSelected ? AppColors.primaryBlue : Colors.white.withOpacity(0.6), // Glass
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primaryBlue : Colors.grey.shade200,
+            color: isSelected ? AppColors.primaryBlue : Colors.white.withOpacity(0.5),
+            width: 1.5,
           ),
           boxShadow: [
             if (!isSelected)
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+                color: AppColors.primaryBlue.withOpacity(0.05), // Subtle blue tint shadow
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
           ],
         ),

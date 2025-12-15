@@ -64,6 +64,14 @@ class AppTheme {
       ),
       
       useMaterial3: true,
+      
+      // Premium Page Transitions
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: ZoomPageTransitionsBuilder(),
+          TargetPlatform.iOS: ZoomPageTransitionsBuilder(),
+        },
+      ),
     );
   }
 }
