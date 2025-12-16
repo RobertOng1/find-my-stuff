@@ -150,8 +150,8 @@ class _StatusScreenState extends State<StatusScreen> {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: !_isClaimedTabActive 
-                                    ? AppColors.textDark 
-                                    : AppColors.primaryBlue.withOpacity(0.6),
+                                    ? AppColors.primaryBlue.withOpacity(0.6) 
+                                    : AppColors.textDark,
                                 fontSize: 14,
                               ),
                             ),
@@ -186,8 +186,8 @@ class _StatusScreenState extends State<StatusScreen> {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: _isClaimedTabActive 
-                                    ? AppColors.textDark 
-                                    : AppColors.primaryBlue.withOpacity(0.6),
+                                    ? AppColors.primaryBlue.withOpacity(0.6) 
+                                    : AppColors.textDark,
                                 fontSize: 14,
                               ),
                             ),

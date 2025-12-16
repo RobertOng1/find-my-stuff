@@ -55,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Find Your Stuff', // More engaging title
+                      'Find My Stuff',
                       style: TextStyle(
                         fontSize: 28, // Larger
                         fontWeight: FontWeight.w800,
@@ -138,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  'Found Nearby',
+                                  'Found',
                                   style: TextStyle(
                                     fontWeight: _isFoundTabActive ? FontWeight.bold : FontWeight.w500,
                                     color: _isFoundTabActive ? Colors.white : AppColors.textGrey,
@@ -172,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  'Looking For',
+                                  'Lost',
                                   style: TextStyle(
                                     fontWeight: !_isFoundTabActive ? FontWeight.bold : FontWeight.w500,
                                     color: !_isFoundTabActive ? Colors.white : AppColors.textGrey,
@@ -240,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 12),
                     _buildFilterChip('Library', _selectedLocation == 'Library'),
                     const SizedBox(width: 12),
-                    _buildFilterChip('Canteen', _selectedLocation == 'Canteen'),
+                    _buildFilterChip('Gedung Pancasila', _selectedLocation == 'Gedung Pancasila'),
                     const SizedBox(width: 12),
                     _buildFilterChip('Parking Lot', _selectedLocation == 'Parking Lot'),
                     const SizedBox(width: 24),
@@ -380,6 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   },
                                 ),
                         ),
+                        const SizedBox(height: 100),
                       ],
                     );
                   },
@@ -514,6 +515,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppColors.textGrey,
             ),
           ),
+          const SizedBox(height: 100),
         ],
       ),
     );

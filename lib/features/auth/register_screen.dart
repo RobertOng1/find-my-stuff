@@ -129,26 +129,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
-                    // Back Button
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: AppColors.primaryBlue),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ),
                     
                     const SizedBox(height: 32),
                     
@@ -172,7 +152,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         children: [
                           // Title
                           Text(
-                            'Hello! Register to get\nstarted',
+                            'Welcome! Register to get started.',
                             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textDark,
@@ -272,7 +252,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         const Text(
                           "Already have an account? ",
-                          style: TextStyle(color: AppColors.textDark),
+                          style: TextStyle(color: Colors.white),
                         ),
                         GestureDetector(
                           onTap: () {

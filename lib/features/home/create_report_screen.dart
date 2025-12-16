@@ -223,7 +223,7 @@ class _AddReportScreenState extends State<AddReportScreen> {
                         _buildTextField(
                           controller: _locationController,
                           hintText: isLost 
-                              ? 'e.g. Last seen at Library, Canteen...' 
+                              ? 'e.g. Last seen at USU Library, Gedung Pancasila...' 
                               : 'e.g. Found at Room C-106...',
                         ),
                         const SizedBox(height: 16),

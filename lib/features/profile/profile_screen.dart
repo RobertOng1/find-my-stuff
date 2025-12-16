@@ -101,21 +101,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
                     alignment: Alignment.topCenter,
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
-                          onPressed: () {
-                            // Handled by default navigation if pushed, or MainScreen tab switch
-                          },
-                        ),
-                        const Text(
-                          'My Profile',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
+                        // Empty SizedBox to balance the settings button on the right
+                        const SizedBox(width: 48),
+                        // Expanded to center the text
+                        const Expanded(
+                          child: Text(
+                            'My Profile',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
                         Container(
