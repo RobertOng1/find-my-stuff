@@ -1,21 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
-import '../../widgets/animated_gradient_bg.dart';
-import '../../features/home/home_screen.dart';
-import 'package:find_my_stuff/pages/navbar.dart'; // Assuming this is where MainScreen/NavBar is
+import '../../features/home/main_screen.dart';
 
 class RewardScreen extends StatelessWidget {
   final int pointsEarned;
+  /// If true, the current user is the owner who lost the item.
+  /// If false, the current user is the finder who returned the item.
+  final bool isOwner;
 
-  const RewardScreen({super.key, this.pointsEarned = 50});
+  const RewardScreen({super.key, this.pointsEarned = 50, this.isOwner = false});
 
   @override
   Widget build(BuildContext context) {
+    // Different messages for owner vs finder
+    final String title = isOwner ? 'Great News!' : 'Outstanding!';
+    final String subtitle = isOwner
+        ? 'Your item has been found and verified! You can now arrange to pick it up.'
+        : 'You successfully returned the item to its owner. Great job!';
+    final String rewardLabel = isOwner ? 'ITEM RECOVERED' : 'REWARD EARNED';
+
     return Scaffold(
-      body: Stack(
-        children: [
-          const AnimatedGradientBg(),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF1A237E), // Deep indigo
+              Color(0xFF3949AB), // Indigo
+              Color(0xFF1976D2), // Blue
+            ],
+          ),
+        ),
+        child: Stack(
+          children: [
           SafeArea(
             child: Center(
               child: Padding(
@@ -38,8 +57,8 @@ class RewardScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: const Icon(
-                        Icons.emoji_events_rounded,
+                      child: Icon(
+                        isOwner ? Icons.celebration_rounded : Icons.emoji_events_rounded,
                         size: 80,
                         color: Colors.amberAccent,
                       ),
@@ -50,9 +69,9 @@ class RewardScreen extends StatelessWidget {
                     const SizedBox(height: 48),
 
                     // Title
-                    const Text(
-                      'Outstanding!',
-                      style: TextStyle(
+                    Text(
+                      title,
+                      style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -64,7 +83,7 @@ class RewardScreen extends StatelessWidget {
 
                     // Subtitle
                     Text(
-                      'You successfully returned the item to its owner. Great job!',
+                      subtitle,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -85,9 +104,9 @@ class RewardScreen extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
-                          const Text(
-                            'REWARD EARNED',
-                            style: TextStyle(
+                          Text(
+                            rewardLabel,
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -96,7 +115,7 @@ class RewardScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '+$pointsEarned Points',
+                            isOwner ? 'Success!' : '+$pointsEarned Points',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 28,
@@ -118,7 +137,7 @@ class RewardScreen extends StatelessWidget {
                           // Navigate to MainScreen and remove all previous routes
                           Navigator.pushAndRemoveUntil(
                             context,
-                            MaterialPageRoute(builder: (context) => MainNavbar()), // Corrected class name
+                            MaterialPageRoute(builder: (context) => const MainScreen()),
                             (route) => false,
                           );
                         },
@@ -146,6 +165,7 @@ class RewardScreen extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

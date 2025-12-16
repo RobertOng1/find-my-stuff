@@ -102,8 +102,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     alignment: Alignment.topCenter,
                     child: Row(
                       children: [
-                        // Empty SizedBox to balance the settings button on the right
-                        const SizedBox(width: 48),
                         // Expanded to center the text
                         const Expanded(
                           child: Text(
@@ -117,18 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.settings_outlined, color: Colors.white),
-                            onPressed: () {
-                              // Optional: Navigate to settings
-                            },
-                          ),
-                        ),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),

@@ -45,7 +45,7 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
         if (status == 'ACCEPTED') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const RewardScreen()),
+            MaterialPageRoute(builder: (context) => const RewardScreen(isOwner: true)),
           );
         } else {
           Navigator.pop(context);
