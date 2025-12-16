@@ -499,6 +499,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const SizedBox(height: 15),
           Container(
             width: 100,
             height: 100,
@@ -524,7 +525,6 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppColors.textGrey,
             ),
           ),
-          const SizedBox(height: 100),
         ],
       ),
     );
