@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "217457670566-f4fposgqudpgleqn9nlurs9de4qltc3o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.company.pemob",
+            "certificate_hash": "546ff45b3215f7df26f4945b46e7dd06039aaf46"
+          }
+        },
+        {
           "client_id": "217457670566-63kd1kbhpc0bb3150lpc7tnaqh2vhb7i.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -57,6 +65,22 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "217457670566-4i5tsmkj8pmnp1t15b5gacabuf1pfetf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.find_my_stuff",
+            "certificate_hash": "546ff45b3215f7df26f4945b46e7dd06039aaf46"
+          }
+        },
+        {
+          "client_id": "217457670566-q759071ikb1ftg8ffcdo01bfiqtff2dd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.find_my_stuff",
+            "certificate_hash": "831bf7a1541f829579b5ebb6145edd98c31ced2d"
+          }
+        },
         {
           "client_id": "217457670566-63kd1kbhpc0bb3150lpc7tnaqh2vhb7i.apps.googleusercontent.com",
           "client_type": 3

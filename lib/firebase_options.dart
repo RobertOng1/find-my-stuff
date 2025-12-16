@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '217457670566',
     projectId: 'tubes-pemob-3b373',
     storageBucket: 'tubes-pemob-3b373.firebasestorage.app',
-    androidClientId: '217457670566-5msn1cqr9gdg0ufjb1g2985aogmg538o.apps.googleusercontent.com',
+    androidClientId: '217457670566-4i5tsmkj8pmnp1t15b5gacabuf1pfetf.apps.googleusercontent.com',
     iosClientId: '217457670566-2vc0nodi7gafkgrrqnf9qq5c77hl6r9r.apps.googleusercontent.com',
     iosBundleId: 'com.example.findMyStuff',
   );
@@ -75,7 +75,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '217457670566',
     projectId: 'tubes-pemob-3b373',
     storageBucket: 'tubes-pemob-3b373.firebasestorage.app',
-    androidClientId: '217457670566-5msn1cqr9gdg0ufjb1g2985aogmg538o.apps.googleusercontent.com',
+    androidClientId: '217457670566-4i5tsmkj8pmnp1t15b5gacabuf1pfetf.apps.googleusercontent.com',
     iosClientId: '217457670566-2vc0nodi7gafkgrrqnf9qq5c77hl6r9r.apps.googleusercontent.com',
     iosBundleId: 'com.example.findMyStuff',
   );
