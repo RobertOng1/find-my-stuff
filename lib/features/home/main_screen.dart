@@ -1,5 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/services/notification_service.dart';
+import '../../core/utils/ui_utils.dart';
 import 'home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../status/status_screen.dart';
@@ -15,6 +20,8 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+  StreamSubscription? _claimSubscription;
+  final Set<String> _notifiedClaimIds = {}; // Track already notified claims
 
   final List<Widget> _screens = [
     const HomeScreen(),        // Dashboard
@@ -23,6 +30,67 @@ class _MainScreenState extends State<MainScreen> {
     const MessageListScreen(), // Message
     const ProfileScreen(),     // Profile
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _setupClaimListener();
+  }
+
+  @override
+  void dispose() {
+    _claimSubscription?.cancel();
+    super.dispose();
+  }
+
+  /// Listen for new claims on user's items
+  void _setupClaimListener() {
+    final user = AuthService().currentUser;
+    if (user == null) return;
+
+    // Listen to claims where current user is the finder (item owner)
+    _claimSubscription = FirebaseFirestore.instance
+        .collection('claims')
+        .where('finderId', isEqualTo: user.uid)
+        .where('status', isEqualTo: 'PENDING')
+        .snapshots()
+        .listen((snapshot) {
+      for (final change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.added) {
+          final claimId = change.doc.id;
+          // Only notify for claims we haven't seen yet
+          if (!_notifiedClaimIds.contains(claimId)) {
+            _notifiedClaimIds.add(claimId);
+            final data = change.doc.data();
+            if (data != null) {
+              _showClaimNotification(data);
+            }
+          }
+        }
+      }
+    });
+  }
+
+  /// Show notification for new claim
+  void _showClaimNotification(Map<String, dynamic> claimData) {
+    final claimantName = claimData['claimantName'] ?? 'Someone';
+    
+    // Show local notification (works in foreground)
+    NotificationService().showLocalNotification(
+      title: '🔔 New Claim Request!',
+      body: '$claimantName wants to claim your item',
+      payload: 'claim_${claimData['itemId']}',
+    );
+
+    // Also show in-app snackbar
+    if (mounted) {
+      UiUtils.showModernSnackBar(
+        context,
+        '$claimantName submitted a claim!',
+        isSuccess: true,
+      );
+    }
+  }
 
   void _onItemTapped(int index) {
     // Ignore tap on center FAB placeholder (index 2)

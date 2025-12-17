@@ -104,6 +104,9 @@ class _ProofFormScreenState extends State<ProofFormScreen> {
 
       await _firestoreService.submitClaim(newClaim);
 
+      // Notification is handled by Firestore listener in MainScreen (foreground)
+      // For background notifications, deploy Cloud Functions in `functions/` folder
+
       if (mounted) {
         UiUtils.showModernSnackBar(context, widget.isFoundReport ? 'Report submitted successfully!' : 'Proof submitted successfully!');
         Navigator.pop(context);
