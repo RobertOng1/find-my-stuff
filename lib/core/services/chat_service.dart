@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart'; // Added
+import 'dart:io'; // Added
+import 'dart:convert'; // Added
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // final FirebaseStorage _storage = FirebaseStorage.instance; // Not used anymore
 
   // Generate a consistent chat ID based on participants (User-Centric)
   String getChatId(String userA, String userB) {
@@ -69,26 +73,54 @@ class ChatService {
     return chatId;
   }
 
-  // Send a message
+  // Encode Audio to Base64 (Bypassing Storage)
+  Future<String> uploadAudio(File audioFile, String chatId) async {
+    print('DEBUG: Converting audio to Base64...');
+    try {
+      final bytes = await audioFile.readAsBytes();
+      // Check size limit (approx 1MB for Firestore document less overhead)
+      if (bytes.length > 700000) { // Safety buffer for metadata (700KB)
+         throw 'Audio too long (limit > 1 min). Please record a shorter message.';
+      }
+      
+      final base64String = base64Encode(bytes);
+      print('DEBUG: Encoded Audio length: ${base64String.length}');
+      return base64String;
+    } catch (e) {
+      print('Error encoding audio: $e');
+      throw e;
+    }
+  }
+
+  // Send a message (Text or Audio)
   Future<void> sendMessage({
     required String chatId,
     required String senderId,
-    required String text,
+    String? text,
+    String? audioUrl,
+    String? duration,
   }) async {
+    if ((text == null || text.trim().isEmpty) && audioUrl == null) return;
+
     final DocumentReference chatDoc = _firestore.collection('chats').doc(chatId);
     final CollectionReference messagesCol = chatDoc.collection('messages');
 
     await _firestore.runTransaction((transaction) async {
       // Add message to sub-collection
       transaction.set(messagesCol.doc(), {
-        'text': text,
+        'text': text ?? '',
+        'audioUrl': audioUrl,
+        'duration': duration,
+        'isAudio': audioUrl != null,
         'senderId': senderId,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
       // Update parent chat document
+      String previewText = audioUrl != null ? '🎤 Voice Message' : (text ?? '');
+
       transaction.update(chatDoc, {
-        'lastMessage': text,
+        'lastMessage': previewText,
         'lastMessageTime': FieldValue.serverTimestamp(),
       });
     });
