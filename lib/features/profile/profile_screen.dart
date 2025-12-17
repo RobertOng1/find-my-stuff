@@ -42,24 +42,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user != null) {
       // 2. Get Stats
       final lost = await _firestoreService.getUserItemCount(user.uid, 'LOST');
-      final found = await _firestoreService.getUserItemCount(user.uid, 'FOUND');
+      final found = await _firestoreService.getUserItemCount(user.uid, 'FOUND'); // Total found posts
       
-      // For "Returned", we might count items with status 'RESOLVED' that this user found?
-      // Or items this user lost that were 'RESOLVED'?
-      // For now, let's just use a placeholder or potentially query resolved claimed items.
-      // Let's assume 'Returned' means items I found and returned to owner.
-      // Complex query, maybe skip for now or use mock.
-      // Let's rely on Found items count that are resolved contextually if possible, 
-      // but for V1 we can keep it 0 or mock, OR count 'FOUND' items that are 'RESOLVED'.
-      // Let's try to query 'FOUND' items with status 'RESOLVED'.
-      // _firestoreService doesn't have that specific query yet.
-      // I'll leave it as a TODO or just show foundCount for now.
+      // "Returned" = Items I found that are now RESOLVED
+      final returned = await _firestoreService.getUserItemCount(user.uid, 'FOUND', status: 'RESOLVED');
       
       if (mounted) {
         setState(() {
           _currentUser = user;
           _lostCount = lost;
           _foundCount = found;
+          _returnedCount = returned;
           _isLoading = false;
         });
       }
