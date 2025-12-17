@@ -263,6 +263,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(30),
                       topRight: Radius.circular(30),
+                      bottomLeft: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
                     ),
                   ),
                   child: StreamBuilder<List<ItemModel>>(
@@ -332,6 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     final item = filteredItems[index];
                                     final isLostItem = item.type == 'LOST';
                                     final isReported = reportedIds.contains(item.id);
+                                    final isMyPost = currentUser?.uid == item.userId;
                                     
                                     return LostItemCard(
                                       title: item.title,
@@ -340,6 +343,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       imageUrl: item.imageUrl.isNotEmpty ? item.imageUrl : 'assets/images/logo.png', // Fallback image
                                       isLost: isLostItem,
                                       isClaimed: isReported,
+                                      isMyPost: isMyPost,
                                       onChatPressed: () async {
                                         final currentUser = AuthService().currentUser;
                                         if (currentUser == null) {

@@ -296,58 +296,122 @@ class _StatusScreenState extends State<StatusScreen> {
           return _buildEmptyState('No posts yet');
         }
 
-        return ListView.builder(
+        // UX Improvement: Smart Sort
+        // 1. "Open" items (Needs Attention) go to TOP.
+        // 2. "Resolved" items (History) go to BOTTOM.
+        // 3. Within groups, newest first.
+        // UX Improvement: Smart Sort
+        // 1. "Open" items (Needs Attention) go to TOP.
+        // 2. "Resolved" items (History) go to BOTTOM.
+        // 3. Within groups, newest first.
+        items.sort((a, b) {
+          final aIsResolved = a.status == 'RESOLVED';
+          final bIsResolved = b.status == 'RESOLVED';
+
+          if (aIsResolved != bIsResolved) {
+             return aIsResolved ? 1 : -1; // Resolved goes to bottom
+          }
+          return b.date.compareTo(a.date); // Newest first
+        });
+
+        // Split lists for Collapsible History
+        final activeItems = items.where((i) => i.status != 'RESOLVED').toList();
+        final historyItems = items.where((i) => i.status == 'RESOLVED').toList();
+
+        // Local helper to build rows
+        Widget buildRow(ItemModel item) {
+             return StreamBuilder<List<ClaimModel>>(
+               stream: _firestoreService.getClaimsForItem(item.id),
+               builder: (context, claimSnapshot) {
+                 int pendingCount = 0;
+                 int acceptedCount = 0;
+                 if (claimSnapshot.hasData) {
+                   pendingCount = claimSnapshot.data!.where((c) => c.status == 'PENDING').length;
+                   acceptedCount = claimSnapshot.data!.where((c) => c.status == 'ACCEPTED').length;
+                 }
+
+                 String displayStatus = item.status == 'RESOLVED' ? 'Done' : 'Active';
+                 String statusType = item.status == 'RESOLVED' ? 'done' : 'pending';
+                 
+                 String? customButtonLabel;
+                 Color? customStatusColor;
+                 
+                 if (item.status != 'RESOLVED') {
+                   if (acceptedCount > 0) {
+                      displayStatus = 'Handover Pending';
+                      statusType = 'urgent'; 
+                      customButtonLabel = 'Complete';
+                      customStatusColor = AppColors.primaryBlue;
+                   } else if (pendingCount > 0) {
+                      displayStatus = '$pendingCount Request${pendingCount > 1 ? 's' : ''}';
+                      statusType = 'urgent';
+                      customButtonLabel = 'Review ($pendingCount)';
+                      customStatusColor = AppColors.errorRed;
+                   }
+                 }
+
+                 return StatusItemCard(
+                   title: item.title,
+                   imageUrl: item.imageUrl.isNotEmpty ? item.imageUrl : 'assets/images/logo.png',
+                   status: displayStatus,
+                   statusType: statusType,
+                   type: item.type,
+                   isClaimedTab: false,
+                   customButtonLabel: customButtonLabel,
+                   customStatusColor: customStatusColor,
+                   onActionPressed: () => _handleReportedItemAction(item),
+                 );
+               }
+             );
+        }
+
+        return ListView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            final item = items[index];
-            
-            // Wrap with StreamBuilder to check for pending claims
-            return StreamBuilder<List<ClaimModel>>(
-              stream: _firestoreService.getClaimsForItem(item.id),
-              builder: (context, claimSnapshot) {
-                int pendingCount = 0;
-                int acceptedCount = 0;
-                if (claimSnapshot.hasData) {
-                  pendingCount = claimSnapshot.data!.where((c) => c.status == 'PENDING').length;
-                  acceptedCount = claimSnapshot.data!.where((c) => c.status == 'ACCEPTED').length;
-                }
+          children: [
+            // Active Items List
+            if (activeItems.isNotEmpty) ...[
+               const Padding(
+                 padding: EdgeInsets.only(bottom: 12, top: 4),
+                 child: Text(
+                   'Ongoing', 
+                   style: TextStyle(
+                     fontSize: 18, 
+                     fontWeight: FontWeight.bold, 
+                     color: AppColors.textDark
+                   )
+                 ),
+               ),
+               ...activeItems.map(buildRow),
+            ],
 
-                String displayStatus = item.status == 'RESOLVED' ? 'Done' : 'Active';
-                String statusType = item.status == 'RESOLVED' ? 'done' : 'pending';
-                
-                // Override if claims exist
-                String? customButtonLabel;
-                Color? customStatusColor;
-                
-                if (item.status != 'RESOLVED') {
-                  if (acceptedCount > 0) {
-                     displayStatus = 'Handover Pending';
-                     statusType = 'urgent'; 
-                     customButtonLabel = 'Complete';
-                     customStatusColor = AppColors.primaryBlue;
-                  } else if (pendingCount > 0) {
-                     displayStatus = '$pendingCount Request${pendingCount > 1 ? 's' : ''}';
-                     statusType = 'urgent';
-                     customButtonLabel = 'Review ($pendingCount)';
-                     customStatusColor = AppColors.errorRed;
-                  }
-                }
-
-                return StatusItemCard(
-                  title: item.title,
-                  imageUrl: item.imageUrl.isNotEmpty ? item.imageUrl : 'assets/images/logo.png',
-                  status: displayStatus,
-                  statusType: statusType,
-                  type: item.type,
-                  isClaimedTab: false,
-                  customButtonLabel: customButtonLabel,
-                  customStatusColor: customStatusColor,
-                  onActionPressed: () => _handleReportedItemAction(item),
-                );
-              },
-            );
-          },
+            // Collapsible History Section
+            if (historyItems.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Theme(
+                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    title: Text(
+                      'History (${historyItems.length})', 
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        color: AppColors.textGrey,
+                      )
+                    ),
+                    iconColor: AppColors.textGrey,
+                    collapsedIconColor: AppColors.textGrey,
+                    children: historyItems.map(buildRow).toList(),
+                  ),
+                ),
+              ),
+            ],
+             
+            const SizedBox(height: 100),
+          ],
         );
       },
     );
@@ -369,31 +433,49 @@ class _StatusScreenState extends State<StatusScreen> {
         }
 
         final claims = snapshot.data ?? [];
+        
+        // UX Improvement: Smart Sort for Claims
+        // 1. Accepted (Action Required) -> TOP
+        // 2. Pending (Waiting) -> MIDDLE
+        // 3. Completed/Rejected (History) -> BOTTOM
+        // Split lists for Collapsible History
+        final activeClaims = claims.where((c) => c.status == 'PENDING' || c.status == 'ACCEPTED').toList();
+        final historyClaims = claims.where((c) => c.status != 'PENDING' && c.status != 'ACCEPTED').toList();
+        
+        // Sort active: Accepted (High Priority) first, then Date
+        activeClaims.sort((a, b) {
+            if (a.status == 'ACCEPTED' && b.status != 'ACCEPTED') return -1;
+            if (b.status == 'ACCEPTED' && a.status != 'ACCEPTED') return 1;
+            return b.timestamp.compareTo(a.timestamp);
+        });
+        
+        // Sort history: Date descending
+        historyClaims.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
         if (claims.isEmpty) {
           return _buildEmptyState('No activity yet');
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          itemCount: claims.length,
-          itemBuilder: (context, index) {
-            final claim = claims[index];
-            
-            return FutureBuilder<ItemModel?>(
-              future: _firestoreService.getItem(claim.itemId),
-              builder: (context, itemSnapshot) {
-                if (!itemSnapshot.hasData) return const SizedBox(); // Loading or null
-                
-                final item = itemSnapshot.data!;
-                String displayStatus = '';
-                String statusType = '';
+        // Helper to build rows
+        Widget buildRow(ClaimModel claim) {
+          return FutureBuilder<ItemModel?>(
+            future: _firestoreService.getItem(claim.itemId),
+            builder: (context, itemSnapshot) {
+              if (itemSnapshot.connectionState == ConnectionState.waiting) {
+                 return const Center(child: Padding(
+                   padding: EdgeInsets.all(8.0),
+                   child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                 ));
+              }
+              
+              if (!itemSnapshot.hasData) return const SizedBox.shrink();
 
-                // Determine context: Am I the Finder or the Owner?
-                // If item is LOST, I am the Finder (I clicked "I Found It").
-                // If item is FOUND, I am the Owner (I clicked "Claim").
-                final isFinderContext = item.type == 'LOST';
+              final item = itemSnapshot.data!;
+              String displayStatus = '';
+              String statusType = '';
+              final isFinderContext = item.type == 'LOST';
 
-                switch (claim.status) {
+              switch (claim.status) {
                   case 'PENDING':
                     displayStatus = isFinderContext ? 'Verification Pending' : 'Claim Pending';
                     statusType = 'pending';
@@ -411,11 +493,11 @@ class _StatusScreenState extends State<StatusScreen> {
                      statusType = 'rejected';
                      break;
                   default:
-                     displayStatus = claim.status; // Show actual status if unknown
+                     displayStatus = claim.status; 
                      statusType = 'pending';
-                }
+              }
 
-                return StatusItemCard(
+              return StatusItemCard(
                   title: item.title,
                   imageUrl: item.imageUrl.isNotEmpty ? item.imageUrl : 'assets/images/logo.png',
                   status: displayStatus,
@@ -423,10 +505,74 @@ class _StatusScreenState extends State<StatusScreen> {
                   type: item.type,
                   isClaimedTab: true,
                   onActionPressed: () => _handleClaimedItemAction(claim, item),
-                );
-              },
-            );
-          },
+              );
+            }
+          );
+        }
+
+        return ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          children: [
+            // Ongoing Section (Always Visible)
+             const Padding(
+               padding: EdgeInsets.only(bottom: 12, top: 4),
+               child: Text(
+                 'Ongoing', 
+                 style: TextStyle(
+                   fontSize: 18, 
+                   fontWeight: FontWeight.bold, 
+                   color: AppColors.textDark
+                 )
+               ),
+             ),
+             
+             if (activeClaims.isEmpty)
+               Padding(
+                 padding: const EdgeInsets.symmetric(vertical: 24),
+                 child: Center(
+                   child: Column(
+                     children: [
+                       Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.withOpacity(0.3)),
+                       const SizedBox(height: 8),
+                       Text(
+                         'No ongoing activity',
+                         style: TextStyle(color: Colors.grey.withOpacity(0.5)),
+                       ),
+                     ],
+                   ),
+                 ),
+               )
+             else
+               ...activeClaims.map(buildRow),
+
+             // Collapsible History Section
+            if (historyClaims.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Theme(
+                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    title: Text(
+                      'History (${historyClaims.length})', 
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        color: AppColors.textGrey,
+                      )
+                    ),
+                    iconColor: AppColors.textGrey,
+                    collapsedIconColor: AppColors.textGrey,
+                    children: historyClaims.map(buildRow).toList(),
+                  ),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 100),
+          ],
         );
       },
     );
