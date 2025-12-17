@@ -95,8 +95,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false, // Prevent background movement
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -124,7 +127,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Positioned.fill(
             child: SafeArea(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.fromLTRB(24, 0, 24, bottomInset + 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -235,8 +238,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         SizedBox(
                           width: size.width * 0.8,
                           child: SocialLoginButton(
-                            icon: Icons.g_mobiledata,
-                            color: const Color(0xFFDB4437),
+                            imagePath: 'assets/images/google_logo.png',
                             onPressed: _handleGoogleRegister,
                             text: 'Continue with Google',
                           ),

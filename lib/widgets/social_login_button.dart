@@ -2,18 +2,20 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 
 class SocialLoginButton extends StatelessWidget {
-  final IconData icon;
-  final Color color;
+  final IconData? icon;
+  final String? imagePath;
+  final Color? color;
   final VoidCallback onPressed;
   final String? text;
 
   const SocialLoginButton({
     super.key,
-    required this.icon,
-    required this.color,
+    this.icon,
+    this.imagePath,
+    this.color,
     required this.onPressed,
     this.text,
-  });
+  }) : assert(icon != null || imagePath != null, 'Either icon or imagePath must be provided');
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +42,10 @@ class SocialLoginButton extends StatelessWidget {
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(icon, color: color, size: 24),
+                  if (imagePath != null)
+                    Image.asset(imagePath!, height: 24, width: 24)
+                  else
+                    Icon(icon, color: color, size: 24),
                   const SizedBox(width: 12),
                   Text(
                     text!,
@@ -53,11 +58,9 @@ class SocialLoginButton extends StatelessWidget {
                 ],
               )
             : Center(
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 32,
-                ),
+                child: imagePath != null
+                    ? Image.asset(imagePath!, height: 32, width: 32)
+                    : Icon(icon, color: color, size: 32),
               ),
       ),
     );
