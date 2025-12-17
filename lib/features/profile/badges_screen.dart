@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/models/models.dart';
 
 class BadgesScreen extends StatelessWidget {
-  const BadgesScreen({super.key});
+  final List<String> userBadges;
+
+  const BadgesScreen({super.key, required this.userBadges});
 
   @override
   Widget build(BuildContext context) {
@@ -31,32 +34,77 @@ class BadgesScreen extends StatelessWidget {
           crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: 1.2,
+          childAspectRatio: 0.9,
         ),
-        itemCount: 6, // Placeholder
+        itemCount: BadgeConstants.allBadges.length,
         itemBuilder: (context, index) {
+          final badge = BadgeConstants.allBadges[index];
+          final isUnlocked = userBadges.contains(badge.id);
+          final color = isUnlocked ? Color(badge.colorValue) : Colors.grey;
+          final bgStart = isUnlocked ? color.withOpacity(0.2) : Colors.grey.withOpacity(0.1);
+          final bgEnd = isUnlocked ? color.withOpacity(0.05) : Colors.white;
+
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: index % 2 == 0 ? const Color(0xFFFFF3E0) : const Color(0xFFE3F2FD),
-              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                colors: [bgStart, bgEnd],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isUnlocked ? color.withOpacity(0.3) : Colors.grey.withOpacity(0.3),
+              ),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  index % 2 == 0 ? Icons.emoji_events : Icons.verified,
-                  size: 40,
-                  color: index % 2 == 0 ? const Color(0xFFFFB74D) : const Color(0xFF64B5F6),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  index % 2 == 0 ? 'Golden Hand' : 'Trusted',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    IconData(badge.iconCodePoint, fontFamily: 'MaterialIcons'),
+                    size: 32,
+                    color: color,
                   ),
                 ),
+                const SizedBox(height: 16),
+                Text(
+                  badge.name,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: isUnlocked ? AppColors.textDark : Colors.grey,
+                  ),
+                ),
+                 const SizedBox(height: 8),
+                Text(
+                  badge.description,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isUnlocked ? AppColors.textGrey : Colors.grey.withOpacity(0.7),
+                    height: 1.2,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (!isUnlocked) ...[
+                   const SizedBox(height: 8),
+                   const Icon(Icons.lock_outline, size: 14, color: Colors.grey),
+                ]
               ],
             ),
           );

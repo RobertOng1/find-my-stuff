@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/models/models.dart';
 import '../../features/home/main_screen.dart';
 
 class RewardScreen extends StatelessWidget {
   final int pointsEarned;
-  /// If true, the current user is the owner who lost the item.
-  /// If false, the current user is the finder who returned the item.
   final bool isOwner;
+  final List<String> newBadges;
 
-  const RewardScreen({super.key, this.pointsEarned = 50, this.isOwner = false});
+  const RewardScreen({
+    super.key, 
+    this.pointsEarned = 50, 
+    this.isOwner = false,
+    this.newBadges = const [],
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,96 +40,166 @@ class RewardScreen extends StatelessWidget {
         ),
         child: Stack(
           children: [
-          SafeArea(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Success Icon / Illustration
-                    Container(
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.white.withOpacity(0.1),
-                            blurRadius: 32,
-                            spreadRadius: 8,
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        isOwner ? Icons.celebration_rounded : Icons.emoji_events_rounded,
-                        size: 80,
-                        color: Colors.amberAccent,
-                      ),
-                    ).animate()
-                      .scale(duration: 600.ms, curve: Curves.elasticOut)
-                      .shimmer(delay: 1000.ms, duration: 1500.ms),
-
-                    const SizedBox(height: 48),
-
-                    // Title
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1,
-                      ),
-                    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
-
-                    const SizedBox(height: 16),
-
-                    // Subtitle
-                    Text(
-                      subtitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white.withOpacity(0.9),
-                        height: 1.5,
-                      ),
-                    ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
-
-                    const SizedBox(height: 48),
-
-                    // Points Card
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            rewardLabel,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.5,
+            SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Success Icon / Illustration
+                      Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white.withOpacity(0.1),
+                              blurRadius: 32,
+                              spreadRadius: 8,
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            isOwner ? 'Success!' : '+$pointsEarned Points',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w900,
+                          ],
+                        ),
+                        child: Icon(
+                          isOwner ? Icons.celebration_rounded : Icons.emoji_events_rounded,
+                          size: 80,
+                          color: Colors.amberAccent,
+                        ),
+                      ).animate()
+                        .scale(duration: 600.ms, curve: Curves.elasticOut)
+                        .shimmer(delay: 1000.ms, duration: 1500.ms),
+
+                      const SizedBox(height: 48),
+
+                      // Title
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1,
+                        ),
+                      ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
+
+                      const SizedBox(height: 16),
+
+                      // Subtitle
+                      Text(
+                        subtitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white.withOpacity(0.9),
+                          height: 1.5,
+                        ),
+                      ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
+
+                      const SizedBox(height: 48),
+
+                      // Points Card
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              rewardLabel,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.5,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ).animate().fadeIn(delay: 700.ms).scale(curve: Curves.elasticOut),
+                            const SizedBox(height: 8),
+                            Text(
+                              isOwner ? 'Success!' : '+$pointsEarned Points',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ).animate().fadeIn(delay: 700.ms).scale(curve: Curves.elasticOut),
+                      
+                      if (newBadges.isNotEmpty) ...[
+                        const SizedBox(height: 32),
+                        Column(
+                          children: newBadges.map((badgeId) {
+                            final badge = BadgeConstants.getBadge(badgeId);
+                            if (badge == null) return const SizedBox();
+                            
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFFFD54F), Color(0xFFFFB300)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Colors.black26, 
+                                    blurRadius: 16, 
+                                    offset: Offset(0, 4)
+                                  )
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      IconData(badge.iconCodePoint, fontFamily: 'MaterialIcons'),
+                                      color: Color(badge.colorValue),
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'NEW BADGE UNLOCKED!',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1,
+                                        ),
+                                      ),
+                                      Text(
+                                        badge.name,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ).animate().fadeIn(delay: 1000.ms).slideX(begin: 0.2, end: 0);
+                          }).toList(),
+                        ),
+                      ],
 
                     const Spacer(),
 

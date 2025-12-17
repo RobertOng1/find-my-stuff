@@ -186,38 +186,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const SizedBox(height: 20),
                         const Divider(color: Color(0xFFF0F0F0), thickness: 1),
-                        const SizedBox(height: 16),
-                        _buildInfoRow(Icons.email_rounded, 'Email', email),
-                        // Phone is not in UserModel yet, keep placeholder or remove
-                        // const SizedBox(height: 12),
-                        // _buildInfoRow(Icons.phone_rounded, 'Phone', '+62 857-5849-0242'),
-                      ],
-                    ),
+                  const SizedBox(height: 16),
+                  _buildInfoRow(Icons.email_rounded, 'Email', email),
+                  const SizedBox(height: 12),
+                  // Display real phone number or fallback
+                  _buildInfoRow(
+                    Icons.phone_rounded, 
+                    'Phone', 
+                    _currentUser?.phoneNumber.isNotEmpty == true 
+                        ? _currentUser!.phoneNumber 
+                        : 'Not Set'
                   ),
-                ),
-              ],
-            ),
-            
-            // Spacing
-            const SizedBox(height: 240),
-
-            // Glass Stats Row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  _buildGlassStatCard(_lostCount.toString(), 'Lost Item', const Color(0xFFFFA000)),
-                  const SizedBox(width: 12),
-                  _buildGlassStatCard(_foundCount.toString(), 'Found Item', AppColors.successGreen),
-                  const SizedBox(width: 12),
-                  _buildGlassStatCard(_returnedCount.toString(), 'Returned', AppColors.primaryBlue),
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+      
+      // Spacing
+      const SizedBox(height: 240),
 
-            const SizedBox(height: 24),
+      // Glass Stats Row
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Row(
+          children: [
+            _buildGlassStatCard(_lostCount.toString(), 'Lost Item', const Color(0xFFFFA000)),
+            const SizedBox(width: 12),
+            _buildGlassStatCard(_foundCount.toString(), 'Found Item', AppColors.successGreen),
+            const SizedBox(width: 12),
+            _buildGlassStatCard(_returnedCount.toString(), 'Returned', AppColors.primaryBlue),
+          ],
+        ),
+      ),
 
-            // Badges Section (Static for now)
+      const SizedBox(height: 24),
+
+            // Badges Section (Dynamic)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
@@ -241,10 +247,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const BadgesScreen()),
-                          );
+                          if (_currentUser != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => BadgesScreen(userBadges: _currentUser!.badges)),
+                            );
+                          }
                         },
                         child: const Text(
                           'See All >',
@@ -254,48 +262,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: _buildBadgeCard('Golden Hand\nAward', Icons.back_hand, const Color(0xFFFFF3E0), const Color(0xFFFFB74D))),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildBadgeCard('Pillar of Trust\nAward', Icons.verified, const Color(0xFFE3F2FD), const Color(0xFF64B5F6))),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: _buildBadgeCard('The Verity\nVanguard', Icons.shield, const Color(0xFFE8F5E9), const Color(0xFF81C784))),
-                      const SizedBox(width: 12),
-                      Expanded(child: _buildBadgeCard('Golden Heart', Icons.favorite, const Color(0xFFFFEBEE), const Color(0xFFE57373))),
-                    ],
-                  ),
+                  // Render badges dynamically
+                  if (_currentUser != null && _currentUser!.badges.isNotEmpty) ...[
+                     _buildDynamicBadgesGrid(_currentUser!.badges),
+                  ] else ...[
+                     const Padding(
+                       padding: EdgeInsets.all(16.0),
+                       child: Text('No badges yet. Return lost items to earn them!', style: TextStyle(color: AppColors.textGrey, fontSize: 12)),
+                     )
+                  ]
                 ],
               ),
             ),
 
-            const SizedBox(height: 24),
+      const SizedBox(height: 24),
 
-            // Account Settings
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Account Settings',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildSettingsButton(context, 'Edit Profile', Icons.edit_outlined, () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-                    );
-                  }),
+      // Account Settings
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Account Settings',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildSettingsButton(context, 'Edit Profile', Icons.edit_outlined, () async {
+              if (_currentUser == null) return;
+              
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditProfileScreen(user: _currentUser!),
+                ),
+              );
+              
+              // If true returned, refresh data
+              if (result == true) {
+                _loadProfileData();
+              }
+            }),
                   const SizedBox(height: 12),
                   _buildSettingsButton(context, 'Change Password', Icons.lock_outline, () {
                     Navigator.push(
@@ -391,34 +402,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildDynamicBadgesGrid(List<String> badgeIds) {
+    // Show only first 4 badges max for profile preview
+    final displayIds = badgeIds.take(4).toList();
+    if (displayIds.isEmpty) return const SizedBox();
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 2.5, // Flattened aspect ratio for small card
+      ),
+      itemCount: displayIds.length,
+      itemBuilder: (context, index) {
+        final badge = BadgeConstants.getBadge(displayIds[index]);
+        if (badge == null) return const SizedBox();
+        
+        return _buildBadgeCard(
+          badge.name, 
+          IconData(badge.iconCodePoint, fontFamily: 'MaterialIcons'), 
+          Color(badge.colorValue).withOpacity(0.2), 
+          Color(badge.colorValue)
+        );
+      },
+    );
+  }
+
   Widget _buildBadgeCard(String title, IconData icon, Color bgColor, Color iconColor) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: bgColor.withOpacity(0.5),
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: iconColor.withOpacity(0.1)),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
                   color: iconColor.withOpacity(0.2),
-                  blurRadius: 8,
+                  blurRadius: 4,
                 ),
               ],
             ),
-            child: Icon(icon, color: iconColor, size: 20),
+            child: Icon(icon, color: iconColor, size: 16),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               title,
+              maxLines: 2,
               style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,

@@ -7,6 +7,7 @@ import '../../core/services/auth_service.dart';
 import '../claim/verification_screen.dart';
 import '../claim/widgets/claim_accepted_dialog.dart';
 import '../claim/widgets/claim_rejected_dialog.dart';
+import '../reward/reward_screen.dart';
 import 'widgets/status_item_card.dart';
 import '../../widgets/animated_gradient_bg.dart';
 
@@ -31,47 +32,99 @@ class _StatusScreenState extends State<StatusScreen> {
 
   // --- Logic for Reported Items (My Posts) ---
   
-  void _handleReportedItemAction(ItemModel item) {
-    // Check if there are any PENDING claims for this item
-    // We navigate to a specific logic or show snackbar
-    // For V1, let's assume if status is 'OPEN' but has pending claims -> Go Verify
-    // If status is 'RESOLVED' -> Show Done
-    
-    // We need to know if there are pending claims. Ideally this is passed or fetched.
-    // For now, let's fetch claims for this item on demand
-    
-    showDialog(
+  // --- Logic for Reported Items (My Posts) ---
+  
+  void _handleReportedItemAction(ItemModel item) async {
+    // 1. Fetch claims to determine state
+    if (!mounted) return;
+     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => const Center(child: CircularProgressIndicator()),
     );
-    
-    _firestoreService.getClaimsForItem(item.id).first.then((claims) {
-        if (!mounted) return;
-        Navigator.pop(context); // Close loader
-        
-        // Find pending claim
-        final pendingClaims = claims.where((c) => c.status == 'PENDING').toList();
-        
-        if (pendingClaims.isNotEmpty) {
-           // Go to verification for the first pending claim
-           // In real app, might show list of claimants if multiple
-           Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => VerificationScreen(
-                claim: pendingClaims.first,
-                item: item,
-              ),
+
+    try {
+      final claims = await _firestoreService.getClaimsForItem(item.id).first;
+      if (!mounted) return;
+      Navigator.pop(context); // Close loader
+
+      final acceptedClaim = claims.where((c) => c.status == 'ACCEPTED').firstOrNull;
+      final pendingClaims = claims.where((c) => c.status == 'PENDING').toList();
+
+      if (acceptedClaim != null && item.status != 'RESOLVED') {
+        // Case: Handover Pending
+        await _showCompletionDialog(item, acceptedClaim);
+      } else if (pendingClaims.isNotEmpty) {
+        // Case: Pending Verification
+         Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VerificationScreen(
+              item: item,
+              claim: pendingClaims.first, // Pass the first pending claim
             ),
-          );
+          ),
+        );
+      } else {
+        // Case: No claims or just viewing history
+        if (item.status == 'RESOLVED') {
+          UiUtils.showModernSnackBar(context, 'This item is resolved.');
         } else {
-           if (item.status == 'RESOLVED') {
-             UiUtils.showModernSnackBar(context, 'Item marked as resolved.');
-           } else {
-             UiUtils.showModernSnackBar(context, 'No pending claims yet.', isSuccess: true);
-           }
+          UiUtils.showModernSnackBar(context, 'No pending requests to review.', isSuccess: true);
         }
-    });
+      }
+    } catch (e) {
+      if (mounted) {
+        // close loader if it was likely still open (simplified assumption)
+        // But we already popped it.
+        UiUtils.showModernSnackBar(context, 'Error loading claims: $e', isSuccess: false);
+      }
+    }
+  }
+
+  Future<void> _showCompletionDialog(ItemModel item, ClaimModel claim) async {
+    return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Confirm Return'),
+          content: const Text('Has this item been successfully returned to the owner? This will mark the item as Resolved and award points.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context); // Close dialog
+                try {
+                  // Complete transaction
+                  final newBadges = await _firestoreService.completeReturnTransaction(
+                    itemId: item.id,
+                    claimId: claim.id,
+                    finderId: _currentUserId!,
+                  );
+                  
+                  if (context.mounted) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RewardScreen(
+                          pointsEarned: 100, // Standard reward
+                          isOwner: false, // This is the Finder
+                          newBadges: newBadges,
+                        ),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                   if (context.mounted) UiUtils.showModernSnackBar(context, 'Error: $e', isSuccess: false);
+                }
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        ),
+      );
   }
 
   // --- Logic for Claimed Items (Items I found/claimed) ---
@@ -222,7 +275,6 @@ class _StatusScreenState extends State<StatusScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          print("🚨 Firestore Error (Reported List): ${snapshot.error}"); // Log for clickable link
           return Center(child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text('Error: ${snapshot.error}', textAlign: TextAlign.center),
@@ -240,30 +292,36 @@ class _StatusScreenState extends State<StatusScreen> {
           itemBuilder: (context, index) {
             final item = items[index];
             
-            String displayStatus = item.status == 'RESOLVED' ? 'Done' : 'Active';
-            String statusType = item.status == 'RESOLVED' ? 'done' : 'pending';
-            
             // Wrap with StreamBuilder to check for pending claims
             return StreamBuilder<List<ClaimModel>>(
               stream: _firestoreService.getClaimsForItem(item.id),
               builder: (context, claimSnapshot) {
                 int pendingCount = 0;
+                int acceptedCount = 0;
                 if (claimSnapshot.hasData) {
                   pendingCount = claimSnapshot.data!.where((c) => c.status == 'PENDING').length;
+                  acceptedCount = claimSnapshot.data!.where((c) => c.status == 'ACCEPTED').length;
                 }
 
                 String displayStatus = item.status == 'RESOLVED' ? 'Done' : 'Active';
                 String statusType = item.status == 'RESOLVED' ? 'done' : 'pending';
                 
-                // Override if pending claims exist
+                // Override if claims exist
                 String? customButtonLabel;
                 Color? customStatusColor;
                 
-                if (item.status != 'RESOLVED' && pendingCount > 0) {
-                   displayStatus = '$pendingCount Request${pendingCount > 1 ? 's' : ''}';
-                   statusType = 'urgent'; // New type we will handle in Card or just fallback
-                   customButtonLabel = 'Review ($pendingCount)';
-                   customStatusColor = AppColors.errorRed;
+                if (item.status != 'RESOLVED') {
+                  if (acceptedCount > 0) {
+                     displayStatus = 'Handover Pending';
+                     statusType = 'urgent'; 
+                     customButtonLabel = 'Complete';
+                     customStatusColor = AppColors.primaryBlue;
+                  } else if (pendingCount > 0) {
+                     displayStatus = '$pendingCount Request${pendingCount > 1 ? 's' : ''}';
+                     statusType = 'urgent';
+                     customButtonLabel = 'Review ($pendingCount)';
+                     customStatusColor = AppColors.errorRed;
+                  }
                 }
 
                 return StatusItemCard(

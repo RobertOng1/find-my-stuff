@@ -5,6 +5,7 @@ class UserModel {
   final String email;
   final String displayName;
   final String photoUrl;
+  final String phoneNumber;
   final double trustScore;
   final int points;
   final List<String> badges;
@@ -14,6 +15,7 @@ class UserModel {
     required this.email,
     required this.displayName,
     required this.photoUrl,
+    this.phoneNumber = '',
     this.trustScore = 0.0,
     this.points = 0,
     this.badges = const [],
@@ -25,6 +27,7 @@ class UserModel {
       email: json['email'] ?? '',
       displayName: json['displayName'] ?? '',
       photoUrl: json['photoUrl'] ?? '',
+      phoneNumber: json['phoneNumber'] ?? '',
       trustScore: (json['trustScore'] ?? 0.0).toDouble(),
       points: json['points'] ?? 0,
       badges: List<String>.from(json['badges'] ?? []),
@@ -37,6 +40,7 @@ class UserModel {
       'email': email,
       'displayName': displayName,
       'photoUrl': photoUrl,
+      'phoneNumber': phoneNumber,
       'trustScore': trustScore,
       'points': points,
       'badges': badges,
@@ -159,5 +163,62 @@ class ClaimModel {
       'timestamp': Timestamp.fromDate(timestamp),
       'rejectionReason': rejectionReason,
     };
+  }
+}
+
+class AppBadge {
+  final String id;
+  final String name;
+  final String description;
+  final int iconCodePoint; // Storing as code point for simplicity in JSON/DB if needed, or just mapped constant
+  final int colorValue;
+
+  const AppBadge({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.iconCodePoint,
+    required this.colorValue,
+  });
+}
+
+class BadgeConstants {
+  static const List<AppBadge> allBadges = [
+    AppBadge(
+      id: 'trusted_finder',
+      name: 'Trusted Finder',
+      description: 'Returned your first item successfully.',
+      iconCodePoint: 0xe699, // Icons.verified
+      colorValue: 0xFF64B5F6,
+    ),
+    AppBadge(
+      id: 'golden_hand',
+      name: 'Golden Hand',
+      description: 'Returned 5 items. You are a hero!',
+      iconCodePoint: 0xf55e, // Icons.back_hand (approx) or Icons.volunteer_activism
+      colorValue: 0xFFFFB74D,
+    ),
+    AppBadge(
+      id: 'verity_vanguard',
+      name: 'Verity Vanguard',
+      description: 'Returned 10 items. A legend of honesty.',
+      iconCodePoint: 0xe556, // Icons.shield
+      colorValue: 0xFF81C784,
+    ),
+    AppBadge(
+      id: 'golden_heart',
+      name: 'Golden Heart',
+      description: 'Returned 20 items. Pure benevolence.',
+      iconCodePoint: 0xe25b, // Icons.favorite
+      colorValue: 0xFFE57373,
+    ),
+  ];
+
+  static AppBadge? getBadge(String id) {
+    try {
+      return allBadges.firstWhere((b) => b.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 }

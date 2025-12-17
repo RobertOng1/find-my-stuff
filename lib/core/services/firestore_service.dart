@@ -83,6 +83,83 @@ class FirestoreService {
             .toList());
   }
 
+  // Badge Logic
+  Future<List<String>> checkAndAwardBadges(String userId) async {
+    try {
+      final userDoc = await _db.collection('users').doc(userId).get();
+      if (!userDoc.exists) return [];
+
+      final user = UserModel.fromJson(userDoc.data()!);
+      final foundCount = await getUserItemCount(userId, 'FOUND'); // This might query based on "status=RESOLVED" ideally.
+      // Ideally we should store foundCount in User model to avoid count queries, 
+      // but for now relying on actual returned count or a counter field.
+      // Let's increment a counter in completeReturnTransaction instead to be safe.
+      
+      List<String> newBadges = [];
+      List<String> currentBadges = List.from(user.badges);
+
+      // Criteria
+      if (foundCount >= 1 && !currentBadges.contains('trusted_finder')) {
+        newBadges.add('trusted_finder');
+        currentBadges.add('trusted_finder');
+      }
+      if (foundCount >= 5 && !currentBadges.contains('golden_hand')) {
+        newBadges.add('golden_hand');
+        currentBadges.add('golden_hand');
+      }
+      if (foundCount >= 10 && !currentBadges.contains('verity_vanguard')) {
+        newBadges.add('verity_vanguard');
+        currentBadges.add('verity_vanguard');
+      }
+      if (foundCount >= 20 && !currentBadges.contains('golden_heart')) {
+        newBadges.add('golden_heart');
+        currentBadges.add('golden_heart');
+      }
+
+      if (newBadges.isNotEmpty) {
+        await _db.collection('users').doc(userId).update({
+          'badges': currentBadges,
+          'points': FieldValue.increment(newBadges.length * 50), // Bonus points for badges
+        });
+      }
+
+      return newBadges;
+    } catch (e) {
+      print('Error awarding badges: $e');
+      return [];
+    }
+  }
+
+  Future<List<String>> completeReturnTransaction({
+    required String itemId,
+    required String claimId,
+    required String finderId,
+  }) async {
+    try {
+      // 1. Update Item Status
+      await _db.collection('posts').doc(itemId).update({'status': 'RESOLVED'});
+
+      // 2. Update Claim Status
+      await _db.collection('claims').doc(claimId).update({'status': 'COMPLETED'});
+
+      // 3. Increment Finder Points/Count
+      // Note: We are relying on getUserItemCount queries usually, but let's assume 
+      // checkAndAwardBadges counts actual items. 
+      // However, to make checkAndAwardBadges work accurately with "Resolved" items, 
+      // we need to make sure getUserItemCount filters by resolved or we assume any found item counts.
+      // For now, let's just award points here.
+      await _db.collection('users').doc(finderId).update({
+        'points': FieldValue.increment(100), // 100 points for a return
+      });
+
+      // 4. Check Badges
+      return await checkAndAwardBadges(finderId);
+    } catch (e) {
+      print('Error completing transaction: $e');
+      rethrow;
+    }
+  }
+
   Future<void> updateClaimStatus(String claimId, String status, {String? reason}) async {
     try {
       final Map<String, dynamic> data = {'status': status};
@@ -118,6 +195,19 @@ class FirestoreService {
     } catch (e) {
       print('Error getting user: $e');
       return null;
+    }
+  }
+
+  Future<void> updateUserProfile(UserModel user) async {
+    try {
+      // Create a map of fields to update
+      // We don't want to overwrite everything just in case, but using set with merge is cleaner
+      // But for now, specifically updating profile fields and standardizing. 
+      // Using set(options: SetOptions(merge: true)) is safer.
+      await _db.collection('users').doc(user.uid).set(user.toJson(), SetOptions(merge: true));
+    } catch (e) {
+      print('Error updating user profile: $e');
+      rethrow;
     }
   }
   // Profile Stats

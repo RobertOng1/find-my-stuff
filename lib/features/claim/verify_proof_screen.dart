@@ -30,26 +30,51 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
     try {
       await _firestoreService.updateClaimStatus(widget.claim.id, status, reason: reason);
       
-      if (status == 'ACCEPTED') {
-        // Also resolve the item
-        await _firestoreService.resolveItem(widget.item.id);
-      }
-
       if (mounted) {
-        UiUtils.showModernSnackBar(
-          context,
-          'Claim ${status == 'ACCEPTED' ? 'Accepted' : 'Rejected'}!',
-          isSuccess: status == 'ACCEPTED',
-        );
-        
         if (status == 'ACCEPTED') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const RewardScreen(isOwner: true)),
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Column(
+                children: [
+                   Icon(Icons.check_circle, color: AppColors.successGreen, size: 48),
+                   SizedBox(height: 12),
+                   Text('Claim Verified!', textAlign: TextAlign.center),
+                ],
+              ),
+              content: const Text(
+                'You have accepted this claim. \n\nNow, arrange the meetup. Once you hand over the item, click "Complete" in the list to earn your BADGE and Points!',
+                textAlign: TextAlign.center,
+              ),
+              actions: [
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close dialog
+                      Navigator.pop(context); // Pop VerifyProofScreen
+                      Navigator.pop(context); // Pop VerificationScreen
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Understood'),
+                  ),
+                ),
+              ],
+            ),
           );
         } else {
-          Navigator.pop(context); // Pop VerifyProofScreen
-          Navigator.pop(context); // Pop VerificationScreen
+           UiUtils.showModernSnackBar(
+            context,
+            'Claim Rejected!',
+            isSuccess: false,
+          );
+          Navigator.pop(context);
+          Navigator.pop(context);
         }
       }
     } catch (e) {
