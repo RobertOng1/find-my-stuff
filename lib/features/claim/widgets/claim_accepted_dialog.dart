@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/ui_utils.dart';
+import '../../../core/models/models.dart';
+import '../../../core/services/firestore_service.dart';
+import '../../chat/chat_screen.dart';
+import 'digital_receipt_dialog.dart';
 
 class ClaimAcceptedDialog extends StatelessWidget {
-  const ClaimAcceptedDialog({super.key});
+  final ClaimModel claim;
+  final ItemModel item;
+
+  const ClaimAcceptedDialog({
+    super.key,
+    required this.claim,
+    required this.item,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -59,25 +70,58 @@ class ClaimAcceptedDialog extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildInstructionItem('Location: University Library, Front Desk'),
-                  _buildInstructionItem('Hours: Mon-Fri, 9AM-5PM'),
-                  _buildInstructionItem('Bring ID for verification'),
+                  _buildInstructionItem('Location: ${item.location}'),
+                  _buildInstructionItem('Contact finder for specific time'),
+                  _buildInstructionItem('Bring digital pass below for verification'),
                 ],
               ),
             ),
             
             const SizedBox(height: 24),
             
-            // Send Pickup Details Button
+            // Send Pickup Details Button (Chat)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.pop(context);
-                  UiUtils.showModernSnackBar(context, 'Opening chat...');
+                onPressed: () async {
+                  final firestoreService = FirestoreService();
+                  
+                  // Show loading
+                  UiUtils.showModernSnackBar(context, 'Connecting to finder...');
+                  
+                  try {
+                    // Create or get existing chat
+                    final chatId = await firestoreService.createChat(
+                      itemId: item.id,
+                      itemName: item.title,
+                      claimantId: claim.claimantId,
+                      finderId: claim.finderId,
+                    );
+                    
+                    if (context.mounted) {
+                      Navigator.pop(context); // Close dialog
+                      
+                      // Navigate to Chat
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatScreen(
+                            chatId: chatId,
+                            itemId: item.id,
+                            itemName: item.title,
+                            otherUserId: claim.finderId, // Chatting with Finder
+                          ),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                     if (context.mounted) {
+                        UiUtils.showModernSnackBar(context, 'Error starting chat: $e', isSuccess: false);
+                     }
+                  }
                 },
                 icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                label: const Text('Send Pickup Details in Chat'),
+                label: const Text('Chat with Finder'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
                   foregroundColor: Colors.white,
@@ -89,15 +133,19 @@ class ClaimAcceptedDialog extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             
-            // Download Receipt Button
+            // View Digital Pass Button
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
                 onPressed: () {
-                  UiUtils.showModernSnackBar(context, 'Receipt Downloaded');
+                   Navigator.pop(context); // Close this dialog
+                   showDialog(
+                     context: context,
+                     builder: (context) => DigitalReceiptDialog(claim: claim, item: item),
+                   );
                 },
-                icon: const Icon(Icons.download_rounded, size: 18),
-                label: const Text('Download Receipt'),
+                icon: const Icon(Icons.qr_code_rounded, size: 18),
+                label: const Text('View Digital Pass'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primaryBlue,
                   side: const BorderSide(color: AppColors.primaryBlue),

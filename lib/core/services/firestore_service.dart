@@ -83,9 +83,13 @@ class FirestoreService {
             .toList());
   }
 
-  Future<void> updateClaimStatus(String claimId, String status) async {
+  Future<void> updateClaimStatus(String claimId, String status, {String? reason}) async {
     try {
-      await _db.collection('claims').doc(claimId).update({'status': status});
+      final Map<String, dynamic> data = {'status': status};
+      if (reason != null) {
+        data['rejectionReason'] = reason;
+      }
+      await _db.collection('claims').doc(claimId).update(data);
     } catch (e) {
       print('Error updating claim status: $e');
       rethrow;

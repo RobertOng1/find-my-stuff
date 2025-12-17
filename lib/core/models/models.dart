@@ -114,6 +114,7 @@ class ClaimModel {
   final String proofDescription;
   final List<String> proofImages;
   final DateTime timestamp;
+  final String? rejectionReason; // Added field
 
   ClaimModel({
     required this.id,
@@ -126,6 +127,7 @@ class ClaimModel {
     required this.proofDescription,
     required this.proofImages,
     required this.timestamp,
+    this.rejectionReason,
   });
 
   factory ClaimModel.fromJson(Map<String, dynamic> json, String docId) {
@@ -140,6 +142,7 @@ class ClaimModel {
       proofDescription: json['proofDescription'] ?? '',
       proofImages: List<String>.from(json['proofImages'] ?? []),
       timestamp: (json['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      rejectionReason: json['rejectionReason'],
     );
   }
 
@@ -154,6 +157,7 @@ class ClaimModel {
       'proofDescription': proofDescription,
       'proofImages': proofImages,
       'timestamp': Timestamp.fromDate(timestamp),
+      'rejectionReason': rejectionReason,
     };
   }
 }

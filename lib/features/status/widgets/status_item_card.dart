@@ -9,6 +9,8 @@ class StatusItemCard extends StatelessWidget {
   final String type; // 'LOST' or 'FOUND'
   final bool isClaimedTab;
   final VoidCallback onActionPressed;
+  final String? customButtonLabel;
+  final Color? customStatusColor;
 
   const StatusItemCard({
     super.key,
@@ -19,6 +21,8 @@ class StatusItemCard extends StatelessWidget {
     required this.type,
     required this.isClaimedTab,
     required this.onActionPressed,
+    this.customButtonLabel,
+    this.customStatusColor,
   });
 
   @override
@@ -51,6 +55,11 @@ class StatusItemCard extends StatelessWidget {
     } else {
       // Reported Item tab - user is finder
       switch (statusType) {
+        case 'urgent':
+          statusColor = customStatusColor ?? AppColors.errorRed;
+          buttonLabel = customButtonLabel ?? 'Review';
+          buttonColor = AppColors.errorRed;
+          break;
         case 'pending':
           statusColor = Colors.orange;
           buttonLabel = 'Review';
@@ -64,6 +73,10 @@ class StatusItemCard extends StatelessWidget {
           break;
       }
     }
+    
+    // Final override checks
+    if (customButtonLabel != null) buttonLabel = customButtonLabel!;
+    if (customStatusColor != null) statusColor = customStatusColor!;
 
     final isLostType = type == 'LOST';
     final typeColor = isLostType ? const Color(0xFFFFA000) : AppColors.successGreen;

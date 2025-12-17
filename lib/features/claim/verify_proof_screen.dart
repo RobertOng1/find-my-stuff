@@ -25,10 +25,10 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
   final _firestoreService = FirestoreService();
   bool _isLoading = false;
 
-  Future<void> _updateStatus(String status) async {
+  Future<void> _updateStatus(String status, {String? reason}) async {
     setState(() => _isLoading = true);
     try {
-      await _firestoreService.updateClaimStatus(widget.claim.id, status);
+      await _firestoreService.updateClaimStatus(widget.claim.id, status, reason: reason);
       
       if (status == 'ACCEPTED') {
         // Also resolve the item
@@ -48,7 +48,8 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
             MaterialPageRoute(builder: (context) => const RewardScreen(isOwner: true)),
           );
         } else {
-          Navigator.pop(context);
+          Navigator.pop(context); // Pop VerifyProofScreen
+          Navigator.pop(context); // Pop VerificationScreen
         }
       }
     } catch (e) {
@@ -62,6 +63,49 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showRejectionDialog() {
+    final reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject Claim'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Please provide a reason for rejection so the claimant can understand what went wrong.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Reason (e.g., Photos blurry, Incorrect details)',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (reasonController.text.trim().isEmpty) {
+                 UiUtils.showModernSnackBar(context, 'Please enter a reason', isSuccess: false);
+                 return;
+              }
+              Navigator.pop(context); // Close dialog
+              _updateStatus('REJECTED', reason: reasonController.text.trim());
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.errorRed),
+            child: const Text('Reject'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -278,36 +322,7 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: _isLoading ? null : () {
-                        // Show dialog first, then update if confirmed
-                        showDialog(
-                          context: context,
-                          builder: (context) => const ClaimRejectedDialog(),
-                        ).then((result) {
-                          // If dialog returns true or we handle logic there
-                          // For now, let's just simulate rejection here if they click Reject in dialog
-                          // But the dialog handles its own pop.
-                          // Let's assume the dialog calls a callback or returns a value.
-                          // For simplicity, I'll just call _updateStatus('REJECTED') here directly
-                          // BUT the user wants the dialog to show reasons.
-                          // The dialog currently just pops.
-                          // I will update the dialog to return a value or handle it.
-                          // For this batch, I'll just call _updateStatus('REJECTED') directly for the button action
-                          // Wait, the design says "Reject Claim" button shows dialog.
-                          // I'll leave the dialog logic as is (it's UI only for now) and just call _updateStatus('REJECTED')
-                          // Actually, the dialog should trigger the rejection.
-                          // I'll update the dialog to accept a callback? No, that's too complex for now.
-                          // I'll just make the "Reject" button in the dialog call Navigator.pop(context, true)
-                          // and then handle it here.
-                        });
-                        // For now, to satisfy the requirement "Connect VerifyProofScreen to Firestore",
-                        // I will just make the main button REJECT immediately for testing, 
-                        // OR I can make the dialog return true.
-                        // Let's make the dialog return true.
-                        // But I can't edit the dialog right now easily without another tool call.
-                        // I'll just implement the direct call for now.
-                         _updateStatus('REJECTED');
-                      },
+                      onPressed: _isLoading ? null : _showRejectionDialog, // Updated to show dialog
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.errorRed,
                         side: const BorderSide(color: AppColors.errorRed),

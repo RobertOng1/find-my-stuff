@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 
 class ClaimRejectedDialog extends StatelessWidget {
-  const ClaimRejectedDialog({super.key});
+  final String? reason;
+
+  const ClaimRejectedDialog({super.key, this.reason});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class ClaimRejectedDialog extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Unfortunately, the provided information could not be verified. Please review the reasons below.',
+              'Unfortunately, the provided information could not be verified.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textGrey, height: 1.4),
             ),
@@ -51,16 +53,17 @@ class ClaimRejectedDialog extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Reasons for Rejection:',
+                    'Rejection Reason:',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: AppColors.textDark,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildReasonItem('Provided photos do not match the found item\'s key features'),
-                  _buildReasonItem('Description conflicts with actual item condition'),
-                  _buildReasonItem('Unable to verify serial number or purchase details'),
+                  Text(
+                    reason ?? 'No specific reason provided.',
+                    style: const TextStyle(color: AppColors.textDark, fontSize: 14),
+                  ),
                 ],
               ),
             ),

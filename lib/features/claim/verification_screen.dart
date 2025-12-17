@@ -241,24 +241,14 @@ class _VerificationScreenState extends State<VerificationScreen> {
               padding: const EdgeInsets.all(24),
               child: Row(
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => const ClaimRejectedDialog(),
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.errorRed,
-                        side: const BorderSide(color: AppColors.errorRed),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('Reject'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
+                  // Removed Reject Button as per new workflow
+                  // Expanded(
+                  //   child: OutlinedButton(
+                  //     onPressed: () { ... },
+                  //     ...
+                  //   ),
+                  // ),
+                  // const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {

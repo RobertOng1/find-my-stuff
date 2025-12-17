@@ -18,7 +18,7 @@ class StatusScreen extends StatefulWidget {
 }
 
 class _StatusScreenState extends State<StatusScreen> {
-  bool _isClaimedTabActive = true; // true = Claimed by me (LOST), false = Reported by me (FOUND)
+  bool _isClaimedTabActive = false; // true = Claimed by me (LOST), false = Reported by me (FOUND)
   final FirestoreService _firestoreService = FirestoreService();
   final AuthService _authService = AuthService();
   String? _currentUserId;
@@ -76,16 +76,16 @@ class _StatusScreenState extends State<StatusScreen> {
 
   // --- Logic for Claimed Items (Items I found/claimed) ---
 
-  void _handleClaimedItemAction(ClaimModel claim) async {
+  void _handleClaimedItemAction(ClaimModel claim, ItemModel item) async {
     if (claim.status == 'REJECTED') {
       showDialog(
         context: context,
-        builder: (context) => const ClaimRejectedDialog(),
+        builder: (context) => ClaimRejectedDialog(reason: claim.rejectionReason),
       );
     } else if (claim.status == 'ACCEPTED') {
       showDialog(
         context: context,
-        builder: (context) => const ClaimAcceptedDialog(),
+        builder: (context) => ClaimAcceptedDialog(claim: claim, item: item),
       );
     } else {
       UiUtils.showModernSnackBar(context, 'Waiting for finder to verify your claim...', isSuccess: true);
@@ -243,14 +243,41 @@ class _StatusScreenState extends State<StatusScreen> {
             String displayStatus = item.status == 'RESOLVED' ? 'Done' : 'Active';
             String statusType = item.status == 'RESOLVED' ? 'done' : 'pending';
             
-            return StatusItemCard(
-              title: item.title,
-              imageUrl: item.imageUrl.isNotEmpty ? item.imageUrl : 'assets/images/logo.png',
-              status: displayStatus,
-              statusType: statusType,
-              type: item.type,
-              isClaimedTab: false,
-              onActionPressed: () => _handleReportedItemAction(item),
+            // Wrap with StreamBuilder to check for pending claims
+            return StreamBuilder<List<ClaimModel>>(
+              stream: _firestoreService.getClaimsForItem(item.id),
+              builder: (context, claimSnapshot) {
+                int pendingCount = 0;
+                if (claimSnapshot.hasData) {
+                  pendingCount = claimSnapshot.data!.where((c) => c.status == 'PENDING').length;
+                }
+
+                String displayStatus = item.status == 'RESOLVED' ? 'Done' : 'Active';
+                String statusType = item.status == 'RESOLVED' ? 'done' : 'pending';
+                
+                // Override if pending claims exist
+                String? customButtonLabel;
+                Color? customStatusColor;
+                
+                if (item.status != 'RESOLVED' && pendingCount > 0) {
+                   displayStatus = '$pendingCount Request${pendingCount > 1 ? 's' : ''}';
+                   statusType = 'urgent'; // New type we will handle in Card or just fallback
+                   customButtonLabel = 'Review ($pendingCount)';
+                   customStatusColor = AppColors.errorRed;
+                }
+
+                return StatusItemCard(
+                  title: item.title,
+                  imageUrl: item.imageUrl.isNotEmpty ? item.imageUrl : 'assets/images/logo.png',
+                  status: displayStatus,
+                  statusType: statusType,
+                  type: item.type,
+                  isClaimedTab: false,
+                  customButtonLabel: customButtonLabel,
+                  customStatusColor: customStatusColor,
+                  onActionPressed: () => _handleReportedItemAction(item),
+                );
+              },
             );
           },
         );
@@ -318,7 +345,7 @@ class _StatusScreenState extends State<StatusScreen> {
                   statusType: statusType,
                   type: item.type,
                   isClaimedTab: true,
-                  onActionPressed: () => _handleClaimedItemAction(claim),
+                  onActionPressed: () => _handleClaimedItemAction(claim, item),
                 );
               },
             );
