@@ -266,6 +266,8 @@ class _ChatScreenState extends State<ChatScreen> {
        await _chatService.sendMessage(
          chatId: widget.chatId, 
          senderId: currentUserId, 
+         senderName: _authService.currentUser?.displayName ?? 'User',
+         senderAvatar: _authService.currentUser?.photoURL ?? '',
          audioUrl: audioUrl,
          duration: durationStr
        );
@@ -289,6 +291,8 @@ class _ChatScreenState extends State<ChatScreen> {
     _chatService.sendMessage(
       chatId: widget.chatId,
       senderId: currentUserId,
+      senderName: _authService.currentUser?.displayName ?? 'User',
+      senderAvatar: _authService.currentUser?.photoURL ?? '',
       text: _messageController.text.trim(),
     );
     
@@ -411,6 +415,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       final docs = snapshot.data?.docs ?? [];
 
                       return ListView.builder(
+                        reverse: true, // Start from bottom
                         padding: const EdgeInsets.all(20),
                         itemCount: docs.length,
                         itemBuilder: (context, index) {

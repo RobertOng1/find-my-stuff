@@ -96,6 +96,8 @@ class ChatService {
   Future<void> sendMessage({
     required String chatId,
     required String senderId,
+    required String senderName,   // NEW
+    required String senderAvatar, // NEW
     String? text,
     String? audioUrl,
     String? duration,
@@ -122,6 +124,9 @@ class ChatService {
       transaction.update(chatDoc, {
         'lastMessage': previewText,
         'lastMessageTime': FieldValue.serverTimestamp(),
+        'lastSenderId': senderId, 
+        'lastSenderName': senderName, // Track name for notifications
+        'lastSenderAvatar': senderAvatar, // Track avatar for notifications
       });
     });
   }
@@ -132,7 +137,7 @@ class ChatService {
         .collection('chats')
         .doc(chatId)
         .collection('messages')
-        .orderBy('timestamp', descending: false)
+        .orderBy('timestamp', descending: true)
         .snapshots();
   }
 

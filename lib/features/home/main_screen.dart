@@ -9,6 +9,7 @@ import 'home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../status/status_screen.dart';
 import '../message/message_list_screen.dart';
+import '../chat/chat_screen.dart';
 import 'create_report_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -20,8 +21,10 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
-  StreamSubscription? _claimSubscription;
-  final Set<String> _notifiedClaimIds = {}; // Track already notified claims
+  StreamSubscription? _chatSubscription; // NEW: Listen for msgs
+  StreamSubscription? _myClaimSubscription; // NEW: Listen for status updates
+  StreamSubscription? _claimSubscription; 
+  final Set<String> _notifiedClaimIds = {}; 
 
   final List<Widget> _screens = [
     const HomeScreen(),        // Dashboard
@@ -34,12 +37,16 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _setupClaimListener();
+    _setupClaimListener();    // Existing (Owner)
+    _setupChatListener();     // NEW: Chat
+    _setupMyClaimListener();  // NEW: Claimant (Accepted/Rejected)
   }
 
   @override
   void dispose() {
     _claimSubscription?.cancel();
+    _chatSubscription?.cancel();
+    _myClaimSubscription?.cancel();
     super.dispose();
   }
 
@@ -58,31 +65,169 @@ class _MainScreenState extends State<MainScreen> {
       for (final change in snapshot.docChanges) {
         if (change.type == DocumentChangeType.added) {
           final claimId = change.doc.id;
+          final data = change.doc.data();
+          if (data == null) continue;
+
+          // Prevent spam on app start: Check if claim is old
+          final timestamp = data['timestamp'] as Timestamp?;
+          if (timestamp != null) {
+            final now = DateTime.now();
+            final claimTime = timestamp.toDate();
+            // If claim is older than 5 minutes, assume it's "existing data" and don't notify
+            // Unless we want to be stricter, but 5 mins covers "just happened" vs "old".
+            if (now.difference(claimTime).inMinutes > 5) continue;
+          }
+
           // Only notify for claims we haven't seen yet
           if (!_notifiedClaimIds.contains(claimId)) {
             _notifiedClaimIds.add(claimId);
-            final data = change.doc.data();
-            if (data != null) {
-              _showClaimNotification(data);
-            }
+            _showClaimNotification(data);
           }
         }
       }
     });
   }
 
-  /// Show notification for new claim
+  /// NEW: Listen for new messages in chats I'm part of
+  void _setupChatListener() {
+    final user = AuthService().currentUser;
+    if (user == null) return;
+
+    _chatSubscription = FirebaseFirestore.instance
+        .collection('chats')
+        .where('participants', arrayContains: user.uid)
+        .orderBy('lastMessageTime', descending: true)
+        .limit(1) // Only watch the most active chat to save reads? Or watch all? Watch logic is complex.
+        // Actually, typical chat apps watch the collection query.
+        // For efficiency in this demo, let's watch the query. 
+        .snapshots() 
+        .listen((snapshot) {
+      for (final change in snapshot.docChanges) {
+        // We only care about MODIFIED (new msg) or ADDED (new chat)
+        if (change.type == DocumentChangeType.modified || change.type == DocumentChangeType.added) {
+          final data = change.doc.data();
+          if (data == null) continue;
+
+          final lastSenderId = data['lastSenderId'];
+          final lastMessageTime = data['lastMessageTime'] as Timestamp?;
+          
+          // 1. Don't notify if I sent it
+          if (lastSenderId == user.uid) continue;
+
+          // 2. Don't notify if message is old (stale data on init)
+          // Simple check: if message is older than 30 seconds, ignore.
+          if (lastMessageTime != null) {
+            final now = DateTime.now();
+            final msgTime = lastMessageTime.toDate();
+            if (now.difference(msgTime).inSeconds > 30) continue;
+          }
+
+          // 3. Show Notification
+          // Determine other user ID for navigation
+          final participants = List<String>.from(data['participants'] ?? []);
+          final otherUserId = participants.firstWhere((id) => id != user.uid, orElse: () => '');
+          
+          final senderName = data['lastSenderName'] ?? 'Someone';
+          final senderAvatar = data['lastSenderAvatar'] as String?;
+
+          if (mounted) {
+             InAppNotification.show(
+              context,
+              title: senderName, // Show dynamic name
+              message: data['lastMessage'] ?? 'Sent a message',
+              avatarUrl: senderAvatar, // Show dynamic avatar
+              icon: Icons.chat_bubble_rounded, // Fallback icon
+              iconColor: AppColors.successGreen,
+              actionLabel: 'Reply',
+              onActionTap: () {
+                // Navigate DIRECTLY to the chat
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                      chatId: data['id'],
+                      itemId: data['itemId'] ?? '',
+                      itemName: data['itemName'] ?? 'Item',
+                      otherUserId: otherUserId,
+                      otherUserName: senderName, // Use the name we have
+                    ),
+                  ),
+                );
+              },
+              onTap: () {
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                      chatId: data['id'],
+                      itemId: data['itemId'] ?? '',
+                      itemName: data['itemName'] ?? 'Item',
+                      otherUserId: otherUserId,
+                      otherUserName: senderName,
+                    ),
+                  ),
+                );
+              },
+            );
+          }
+        }
+      }
+    });
+  }
+
+  /// NEW: Listen for updates to claims *I made*
+  void _setupMyClaimListener() {
+    final user = AuthService().currentUser;
+    if (user == null) return;
+
+    _myClaimSubscription = FirebaseFirestore.instance
+        .collection('claims')
+        .where('claimantId', isEqualTo: user.uid)
+        .snapshots()
+        .listen((snapshot) {
+      for (final change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.modified) {
+          final data = change.doc.data();
+          if (data == null) continue;
+
+          final status = data['status'];
+          if (status == 'ACCEPTED') {
+            _showMyClaimUpdateNotification(
+              title: 'Claim Accepted! 🎉', 
+              body: 'The owner verified your claim. Tap to coordinate handover.',
+              isPositive: true
+            );
+          } else if (status == 'REJECTED') {
+            _showMyClaimUpdateNotification(
+              title: 'Claim Rejected',
+              body: 'Reason: ${data['rejectionReason'] ?? 'Details not provided'}',
+              isPositive: false
+            );
+          }
+        }
+      }
+    });
+  }
+
+  void _showMyClaimUpdateNotification({required String title, required String body, required bool isPositive}) {
+    if (!mounted) return;
+    InAppNotification.show(
+      context,
+      title: title,
+      message: body,
+      icon: isPositive ? Icons.check_circle : Icons.cancel,
+      iconColor: isPositive ? AppColors.successGreen : AppColors.errorRed,
+      actionLabel: 'View',
+      onActionTap: () => setState(() => _selectedIndex = 1), // Go to Status
+      onTap: () => setState(() => _selectedIndex = 1),
+    );
+  }
+
+  /// Show notification for new claim (OWNER SIDE)
   void _showClaimNotification(Map<String, dynamic> claimData) {
     final claimantName = claimData['claimantName'] ?? 'Someone';
     final claimantAvatar = claimData['claimantAvatar'] as String?;
     
-    // Show local notification (system tray)
-    NotificationService().showLocalNotification(
-      title: '🔔 New Claim Request!',
-      body: '$claimantName wants to claim your item',
-      payload: 'claim_${claimData['itemId']}',
-    );
-
     // Show beautiful in-app notification (top slide-in)
     if (mounted) {
       InAppNotification.show(
