@@ -54,7 +54,19 @@ class FirestoreService {
 
   Future<void> submitClaim(ClaimModel claim) async {
     try {
-      await _db.collection('claims').doc(claim.id).set(claim.toJson());
+      final batch = _db.batch();
+
+      // 1. Create the claim
+      final claimRef = _db.collection('claims').doc(claim.id);
+      batch.set(claimRef, claim.toJson());
+
+      // 2. Add item ID to user's reported list (to disable button)
+      final userRef = _db.collection('users').doc(claim.claimantId);
+      batch.update(userRef, {
+        'reportedItemIds': FieldValue.arrayUnion([claim.itemId])
+      });
+
+      await batch.commit();
     } catch (e) {
       print('Error submitting claim: $e');
       rethrow;
@@ -198,6 +210,15 @@ class FirestoreService {
     }
   }
 
+  Stream<UserModel?> getUserStream(String uid) {
+    return _db.collection('users').doc(uid).snapshots().map((doc) {
+      if (doc.exists && doc.data() != null) {
+        return UserModel.fromJson(doc.data()!);
+      }
+      return null;
+    });
+  }
+
   Future<void> updateUserProfile(UserModel user) async {
     try {
       // Create a map of fields to update
@@ -211,14 +232,18 @@ class FirestoreService {
     }
   }
   // Profile Stats
-  Future<int> getUserItemCount(String userId, String type) async {
+  Future<int> getUserItemCount(String userId, String type, {String? status}) async {
     try {
-      final snapshot = await _db
+      Query query = _db
           .collection('posts')
           .where('userId', isEqualTo: userId)
-          .where('type', isEqualTo: type)
-          .count()
-          .get();
+          .where('type', isEqualTo: type);
+      
+      if (status != null) {
+        query = query.where('status', isEqualTo: status);
+      }
+
+      final snapshot = await query.count().get();
       return snapshot.count ?? 0;
     } catch (e) {
       print('Error getting $type count: $e');

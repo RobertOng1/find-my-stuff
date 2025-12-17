@@ -11,6 +11,7 @@ class LostItemCard extends StatelessWidget {
 
   final bool isMyPost;
   final bool isLost;
+  final bool isClaimed;
 
   const LostItemCard({
     super.key,
@@ -22,6 +23,7 @@ class LostItemCard extends StatelessWidget {
     required this.onClaimPressed,
     this.isMyPost = false,
     this.isLost = false,
+    this.isClaimed = false,
   });
 
   @override
@@ -148,6 +150,30 @@ class LostItemCard extends StatelessWidget {
                         fontSize: 12,
                       ),
                     ),
+                  )
+                else if (isClaimed)
+                   Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: null, // Disabled
+                          icon: const Icon(Icons.check, size: 14),
+                          label: const Text('Reported', style: TextStyle(fontSize: 12)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey.shade300,
+                            foregroundColor: Colors.grey.shade600,
+                            disabledBackgroundColor: Colors.grey.shade300,
+                            disabledForegroundColor: Colors.grey.shade600,
+                            padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+                            minimumSize: const Size(0, 32),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                    ],
                   )
                 else if (isLost)
                   Row(

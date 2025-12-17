@@ -169,20 +169,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryLight.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            role,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.w600,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryLight.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                role,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.primaryBlue,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF8E1), // Amber 50
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: const Color(0xFFFFD54F)), // Amber 300
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.stars_rounded, size: 16, color: Color(0xFFFFB300)),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${_currentUser?.points ?? 0} Pts',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFFF57F17), // Amber 900
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 20),
                         const Divider(color: Color(0xFFF0F0F0), thickness: 1),

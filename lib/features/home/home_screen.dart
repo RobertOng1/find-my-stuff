@@ -297,100 +297,114 @@ class _HomeScreenState extends State<HomeScreen> {
                         return matchesSearch && matchesLocation && matchesCategory;
                       }).toList();
 
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24.0),
-                            child: Text(
-                              _isFoundTabActive ? 'Found Items' : 'Lost Reports',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textDark,
+                      final currentUser = AuthService().currentUser;
+
+                      return StreamBuilder<UserModel?>(
+                        stream: currentUser != null 
+                            ? _firestoreService.getUserStream(currentUser.uid) 
+                            : Stream<UserModel?>.value(null),
+                        builder: (context, userSnapshot) {
+                          final userModel = userSnapshot.data;
+                          final reportedIds = userModel?.reportedItemIds ?? [];
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 24.0),
+                                child: Text(
+                                  _isFoundTabActive ? 'Found Items' : 'Lost Reports',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textDark,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          if (filteredItems.isEmpty)
-                            _buildEmptyState()
-                          else
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: filteredItems.length,
-                              itemBuilder: (context, index) {
-                                final item = filteredItems[index];
-                                final isLostItem = item.type == 'LOST';
-                                
-                                return LostItemCard(
-                                  title: item.title,
-                                  description: item.description,
-                                  location: item.location,
-                                  imageUrl: item.imageUrl.isNotEmpty ? item.imageUrl : 'assets/images/logo.png', // Fallback image
-                                  isLost: isLostItem,
-                                  onChatPressed: () async {
-                                    final currentUser = AuthService().currentUser;
-                                    if (currentUser == null) {
-                                      UiUtils.showModernSnackBar(context, 'Please login to chat', isSuccess: false);
-                                      return;
-                                    }
+                              if (filteredItems.isEmpty)
+                                _buildEmptyState()
+                              else
+                                ListView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: filteredItems.length,
+                                  itemBuilder: (context, index) {
+                                    final item = filteredItems[index];
+                                    final isLostItem = item.type == 'LOST';
+                                    final isReported = reportedIds.contains(item.id);
+                                    
+                                    return LostItemCard(
+                                      title: item.title,
+                                      description: item.description,
+                                      location: item.location,
+                                      imageUrl: item.imageUrl.isNotEmpty ? item.imageUrl : 'assets/images/logo.png', // Fallback image
+                                      isLost: isLostItem,
+                                      isClaimed: isReported,
+                                      onChatPressed: () async {
+                                        final currentUser = AuthService().currentUser;
+                                        if (currentUser == null) {
+                                          UiUtils.showModernSnackBar(context, 'Please login to chat', isSuccess: false);
+                                          return;
+                                        }
 
-                                    // Prevent chatting with yourself
-                                    if (currentUser.uid == item.userId) {
-                                      UiUtils.showModernSnackBar(context, 'You cannot chat with yourself', isSuccess: false);
-                                      return;
-                                    }
+                                        // Prevent chatting with yourself
+                                        if (currentUser.uid == item.userId) {
+                                          UiUtils.showModernSnackBar(context, 'You cannot chat with yourself', isSuccess: false);
+                                          return;
+                                        }
 
-                                    final chatId = await FirestoreService().createChat(
-                                      itemId: item.id,
-                                      itemName: item.title,
-                                      claimantId: currentUser.uid, 
-                                      finderId: item.userId,
-                                    );
-
-                                      if (context.mounted) {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => ChatScreen(
-                                              chatId: chatId,
-                                              itemId: item.id,
-                                              itemName: item.title,
-                                              otherUserId: item.userId,
-                                            ),
-                                          ),
+                                        final chatId = await FirestoreService().createChat(
+                                          itemId: item.id,
+                                          itemName: item.title,
+                                          claimantId: currentUser.uid, 
+                                          finderId: item.userId,
                                         );
-                                      }
+
+                                          if (context.mounted) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => ChatScreen(
+                                                  chatId: chatId,
+                                                  itemId: item.id,
+                                                  itemName: item.title,
+                                                  otherUserId: item.userId,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                      },
+                                      onClaimPressed: () {
+                                          final currentUser = AuthService().currentUser;
+                                          if (currentUser == null) {
+                                             UiUtils.showModernSnackBar(context, 'Please login to contact owner', isSuccess: false);
+                                            return;
+                                          }
+                                           if (currentUser.uid == item.userId) {
+                                            UiUtils.showModernSnackBar(context, 'This is your own post', isSuccess: false);
+                                            return;
+                                          }
+                                          
+                                          // Navigate to ProofFormScreen
+                                          // If item is LOST -> I found it -> isFoundReport = true
+                                          // If item is FOUND -> I claim it -> isFoundReport = false
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => ProofFormScreen(
+                                                item: item,
+                                                isFoundReport: isLostItem,
+                                              ),
+                                            ),
+                                          );
+                                      },
+                                    );
                                   },
-                                  onClaimPressed: () {
-                                      final currentUser = AuthService().currentUser;
-                                      if (currentUser == null) {
-                                         UiUtils.showModernSnackBar(context, 'Please login to contact owner', isSuccess: false);
-                                        return;
-                                      }
-                                       if (currentUser.uid == item.userId) {
-                                        UiUtils.showModernSnackBar(context, 'This is your own post', isSuccess: false);
-                                        return;
-                                      }
-                                      
-                                      // Navigate to ProofFormScreen
-                                      // If item is LOST -> I found it -> isFoundReport = true
-                                      // If item is FOUND -> I claim it -> isFoundReport = false
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ProofFormScreen(
-                                            item: item,
-                                            isFoundReport: isLostItem,
-                                          ),
-                                        ),
-                                      );
-                                  },
-                                );
-                              },
-                            ),
-                          const SizedBox(height: 100),
-                        ],
+                                ),
+                              const SizedBox(height: 100),
+                            ],
+                          );
+                        }
                       );
                     },
                   ),

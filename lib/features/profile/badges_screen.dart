@@ -89,7 +89,18 @@ class BadgesScreen extends StatelessWidget {
                     color: isUnlocked ? AppColors.textDark : Colors.grey,
                   ),
                 ),
-                 const SizedBox(height: 8),
+                if (!isUnlocked) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'How to Unlock:',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+                 const SizedBox(height: 4),
                 Text(
                   badge.description,
                   textAlign: TextAlign.center,

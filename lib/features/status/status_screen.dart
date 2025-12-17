@@ -85,17 +85,17 @@ class _StatusScreenState extends State<StatusScreen> {
   Future<void> _showCompletionDialog(ItemModel item, ClaimModel claim) async {
     return showDialog(
         context: context,
-        builder: (context) => AlertDialog(
+        builder: (dialogContext) => AlertDialog(
           title: const Text('Confirm Return'),
           content: const Text('Has this item been successfully returned to the owner? This will mark the item as Resolved and award points.'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.pop(context); // Close dialog
+                Navigator.pop(dialogContext); // Close dialog
                 try {
                   // Complete transaction
                   final newBadges = await _firestoreService.completeReturnTransaction(
@@ -104,7 +104,7 @@ class _StatusScreenState extends State<StatusScreen> {
                     finderId: _currentUserId!,
                   );
                   
-                  if (context.mounted) {
+                  if (mounted) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -117,7 +117,7 @@ class _StatusScreenState extends State<StatusScreen> {
                     );
                   }
                 } catch (e) {
-                   if (context.mounted) UiUtils.showModernSnackBar(context, 'Error: $e', isSuccess: false);
+                   if (mounted) UiUtils.showModernSnackBar(context, 'Error: $e', isSuccess: false);
                 }
               },
               child: const Text('Confirm'),
@@ -139,6 +139,16 @@ class _StatusScreenState extends State<StatusScreen> {
       showDialog(
         context: context,
         builder: (context) => ClaimAcceptedDialog(claim: claim, item: item),
+      );
+    } else if (claim.status == 'COMPLETED') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const RewardScreen(
+            isOwner: true,
+            pointsEarned: 0, // Not relevant for owner
+          ),
+        ),
       );
     } else {
       UiUtils.showModernSnackBar(context, 'Waiting for finder to verify your claim...', isSuccess: true);
@@ -387,12 +397,16 @@ class _StatusScreenState extends State<StatusScreen> {
                      displayStatus = 'Status Accepted';
                      statusType = 'accepted';
                      break;
+                  case 'COMPLETED':
+                     displayStatus = 'Handover Complete';
+                     statusType = 'done';
+                     break;
                   case 'REJECTED':
                      displayStatus = 'Status Rejected';
                      statusType = 'rejected';
                      break;
                   default:
-                     displayStatus = 'Unknown';
+                     displayStatus = claim.status; // Show actual status if unknown
                      statusType = 'pending';
                 }
 

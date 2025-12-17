@@ -9,6 +9,7 @@ class UserModel {
   final double trustScore;
   final int points;
   final List<String> badges;
+  final List<String> reportedItemIds;
 
   UserModel({
     required this.uid,
@@ -19,6 +20,7 @@ class UserModel {
     this.trustScore = 0.0,
     this.points = 0,
     this.badges = const [],
+    this.reportedItemIds = const [],
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -31,6 +33,7 @@ class UserModel {
       trustScore: (json['trustScore'] ?? 0.0).toDouble(),
       points: json['points'] ?? 0,
       badges: List<String>.from(json['badges'] ?? []),
+      reportedItemIds: List<String>.from(json['reportedItemIds'] ?? []),
     );
   }
 
@@ -44,6 +47,7 @@ class UserModel {
       'trustScore': trustScore,
       'points': points,
       'badges': badges,
+      'reportedItemIds': reportedItemIds,
     };
   }
 }
