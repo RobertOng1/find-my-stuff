@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:find_my_stuff/features/auth/login_screen.dart';
 import 'package:find_my_stuff/core/theme/app_colors.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:find_my_stuff/features/home/main_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -14,12 +16,21 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Navigate to LoginScreen after 3 seconds
+    // Navigate based on Auth State after delay
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          // User is logged in, go to MainScreen
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const MainScreen()),
+          );
+        } else {
+          // User is not logged in, go to LoginScreen
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
+        }
       }
     });
   }

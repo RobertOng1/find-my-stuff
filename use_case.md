@@ -86,7 +86,7 @@ Dokumen ini berisi daftar **Use Case** krusial yang harus diuji oleh tim testing
     2.  Tekan "Claim This Item".
     3.  Upload bukti foto dan deskripsi unik.
     4.  Submit.
-    5.  **Harapan:** Status berubah menjadi "Pending Review". Tombol chat ke penemu aktif.
+    5.  **Harapan:** Status berubah menjadi "Pending Review".
 
 ### **UC-09: Verifikasi Bukti (Finder)**
 *   **Tujuan:** Memastikan pemilik barang bisa memvalidasi klaim.
@@ -96,7 +96,7 @@ Dokumen ini berisi daftar **Use Case** krusial yang harus diuji oleh tim testing
     3.  Masuk ke layar Verifikasi.
     4.  **Cek Validasi:** Pastikan Trust Score dan Poin pengklaim muncul (bukan placeholder).
     5.  Tekan "Accept".
-    6.  **Harapan:** Muncul dialog sukses, dan status barang berubah (tidak bisa diklaim orang lain lagi).
+    6.  **Harapan:** Muncul dialog sukses, dan status barang berubah (tidak bisa diklaim orang lain lagi) ataupun hilang.
 
 ---
 
