@@ -10,6 +10,7 @@ import '../../core/services/storage_service.dart';
 import '../../core/models/models.dart';
 import '../../core/utils/ui_utils.dart';
 import '../../core/utils/image_picker_helper.dart'; // Added Helper
+import '../../core/services/draft_service.dart'; // Added Draft Service
 import '../../widgets/animated_gradient_bg.dart';
 
 class AddReportScreen extends StatefulWidget {
@@ -49,6 +50,49 @@ class _AddReportScreenState extends State<AddReportScreen> {
     _descriptionController.dispose();
     _locationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDraft();
+  }
+
+  Future<void> _loadDraft() async {
+    final draft = await DraftService.getDraft('report_${widget.reportType}');
+    if (draft != null) {
+      setState(() {
+        _titleController.text = draft['title'] ?? '';
+        _descriptionController.text = draft['description'] ?? '';
+        _locationController.text = draft['location'] ?? '';
+        _selectedCategory = draft['category'] ?? 'Electronics';
+        if (draft['imagePath'] != null) {
+          _imageFile = XFile(draft['imagePath']);
+        }
+      });
+      if (mounted) {
+         UiUtils.showModernSnackBar(context, 'Draft loaded from previous session');
+      }
+    }
+  }
+
+  Future<void> _saveDraft() async {
+    final data = {
+      'title': _titleController.text,
+      'description': _descriptionController.text,
+      'location': _locationController.text,
+      'category': _selectedCategory,
+      'imagePath': _imageFile?.path,
+    };
+    await DraftService.saveDraft('report_${widget.reportType}', data);
+    if (mounted) {
+      UiUtils.showModernSnackBar(context, 'Draft Saved Successfully');
+      Navigator.pop(context); // Go back after saving
+    }
+  }
+
+  Future<void> _clearDraft() async {
+    await DraftService.clearDraft('report_${widget.reportType}');
   }
 
   Future<void> _pickImage() async {
@@ -97,6 +141,9 @@ class _AddReportScreenState extends State<AddReportScreen> {
       );
 
       await _firestoreService.createPost(newItem);
+
+      // Clear draft on success
+      await _clearDraft();
 
       if (mounted) {
         UiUtils.showModernSnackBar(context, 'Report Posted Successfully!');
@@ -254,6 +301,13 @@ class _AddReportScreenState extends State<AddReportScreen> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Center(
+                          child: TextButton(
+                            onPressed: _saveDraft,
+                            child: const Text('Save Draft', style: TextStyle(color: AppColors.textGrey)),
                           ),
                         ),
                         const SizedBox(height: 40),

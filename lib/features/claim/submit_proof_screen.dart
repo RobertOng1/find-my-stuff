@@ -11,7 +11,8 @@ import '../../core/services/storage_service.dart'; // Added Storage Service
 import '../../core/models/models.dart';
 import '../../core/utils/ui_utils.dart';
 import '../../core/services/auth_service.dart';
-import '../../core/utils/image_picker_helper.dart'; // Added Helper
+import '../../core/utils/image_picker_helper.dart'; 
+import '../../core/services/draft_service.dart'; // Added Wrappers
 
 class ProofFormScreen extends StatefulWidget {
   final ItemModel item;
@@ -29,11 +30,52 @@ class ProofFormScreen extends StatefulWidget {
 
 class _ProofFormScreenState extends State<ProofFormScreen> {
   final _proofDescriptionController = TextEditingController();
+  final _dateLostController = TextEditingController(); // Added
   final _firestoreService = FirestoreService();
   final _storageService = StorageService(); // Init Storage Service
 
   File? _selectedImage; // State for selected image
   bool _isLoading = false;
+
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDraft();
+  }
+
+  Future<void> _loadDraft() async {
+    final draft = await DraftService.getDraft('proof_${widget.item.id}');
+    if (draft != null) {
+      setState(() {
+        _proofDescriptionController.text = draft['description'] ?? '';
+        _dateLostController.text = draft['dateLost'] ?? ''; // Added
+        if (draft['imagePath'] != null) {
+          _selectedImage = File(draft['imagePath']);
+        }
+      });
+      if (mounted) {
+         UiUtils.showModernSnackBar(context, 'Draft loaded from previous session');
+      }
+    }
+  }
+
+  Future<void> _saveDraft() async {
+    final data = {
+      'description': _proofDescriptionController.text,
+      'dateLost': _dateLostController.text, // Added
+      'imagePath': _selectedImage?.path,
+    };
+    await DraftService.saveDraft('proof_${widget.item.id}', data);
+    if (mounted) {
+      UiUtils.showModernSnackBar(context, 'Draft Saved Successfully');
+      Navigator.pop(context); // Go back after saving
+    }
+  }
+
+  Future<void> _clearDraft() async {
+    await DraftService.clearDraft('proof_${widget.item.id}');
+  }
 
   Future<void> _pickImage() async {
     final pickedFile = await ImagePickerHelper.pickImage(context, imageQuality: 50);
@@ -47,6 +89,7 @@ class _ProofFormScreenState extends State<ProofFormScreen> {
   @override
   void dispose() {
     _proofDescriptionController.dispose();
+    _dateLostController.dispose(); // Added
     super.dispose();
   }
 
@@ -100,6 +143,9 @@ class _ProofFormScreenState extends State<ProofFormScreen> {
       );
 
       await _firestoreService.submitClaim(newClaim);
+      
+      // Clear draft on success
+      await _clearDraft();
 
       // Notification is handled by Firestore listener in MainScreen (foreground)
       // For background notifications, deploy Cloud Functions in `functions/` folder
@@ -204,7 +250,7 @@ class _ProofFormScreenState extends State<ProofFormScreen> {
                       const SizedBox(height: 16),
                       
                       _buildSectionLabel('Date Lost *'),
-                      _buildGlassTextField(hintText: '11/21/2025'),
+                      _buildGlassTextField(hintText: '11/21/2025', controller: _dateLostController), // Linked Controller
                       
                       const SizedBox(height: 16),
                   ],
@@ -297,8 +343,7 @@ class _ProofFormScreenState extends State<ProofFormScreen> {
                   Center(
                     child: TextButton(
                       onPressed: () {
-                        UiUtils.showModernSnackBar(context, 'Draft Saved');
-                        Navigator.pop(context);
+                        _saveDraft();
                       },
                       child: const Text(
                         'Save Draft',
@@ -332,6 +377,7 @@ class _ProofFormScreenState extends State<ProofFormScreen> {
   Widget _buildGlassTextField({
     required String hintText, 
     bool readOnly = false,
+    TextEditingController? controller, // Added controller
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -347,6 +393,7 @@ class _ProofFormScreenState extends State<ProofFormScreen> {
         ],
       ),
       child: TextField(
+        controller: controller, // Pass controller
         readOnly: readOnly,
         style: TextStyle(
           fontWeight: FontWeight.w500,
