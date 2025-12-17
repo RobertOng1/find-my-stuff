@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/notification_service.dart';
-import '../../core/utils/ui_utils.dart';
+import '../../widgets/in_app_notification.dart';
 import 'home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../status/status_screen.dart';
@@ -74,20 +74,33 @@ class _MainScreenState extends State<MainScreen> {
   /// Show notification for new claim
   void _showClaimNotification(Map<String, dynamic> claimData) {
     final claimantName = claimData['claimantName'] ?? 'Someone';
+    final claimantAvatar = claimData['claimantAvatar'] as String?;
     
-    // Show local notification (works in foreground)
+    // Show local notification (system tray)
     NotificationService().showLocalNotification(
       title: '🔔 New Claim Request!',
       body: '$claimantName wants to claim your item',
       payload: 'claim_${claimData['itemId']}',
     );
 
-    // Also show in-app snackbar
+    // Show beautiful in-app notification (top slide-in)
     if (mounted) {
-      UiUtils.showModernSnackBar(
+      InAppNotification.show(
         context,
-        '$claimantName submitted a claim!',
-        isSuccess: true,
+        title: '🔔 New Claim Request!',
+        message: '$claimantName wants to claim your item',
+        avatarUrl: claimantAvatar,
+        icon: Icons.assignment_turned_in,
+        iconColor: AppColors.primaryBlue,
+        actionLabel: 'View',
+        onActionTap: () {
+          // Navigate to Status screen
+          setState(() => _selectedIndex = 1);
+        },
+        onTap: () {
+          // Navigate to Status screen
+          setState(() => _selectedIndex = 1);
+        },
       );
     }
   }
