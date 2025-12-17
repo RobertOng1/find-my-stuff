@@ -247,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(
                           width: size.width * 0.8,
                           child: SocialLoginButton(
-                            imagePath: 'assets/images/google_logo.png',
+                            imagePath: 'assets/images/google_logo.svg',
                             onPressed: _handleGoogleLogin,
                             text: 'Continue with Google',
                           ),

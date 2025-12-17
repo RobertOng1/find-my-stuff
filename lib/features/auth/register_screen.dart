@@ -238,7 +238,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         SizedBox(
                           width: size.width * 0.8,
                           child: SocialLoginButton(
-                            imagePath: 'assets/images/google_logo.png',
+                            imagePath: 'assets/images/google_logo.svg',
                             onPressed: _handleGoogleRegister,
                             text: 'Continue with Google',
                           ),

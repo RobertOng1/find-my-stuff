@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../core/theme/app_colors.dart';
 
 class SocialLoginButton extends StatelessWidget {
@@ -43,7 +44,9 @@ class SocialLoginButton extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (imagePath != null)
-                    Image.asset(imagePath!, height: 24, width: 24)
+                    imagePath!.endsWith('.svg')
+                        ? SvgPicture.asset(imagePath!, height: 24, width: 24)
+                        : Image.asset(imagePath!, height: 24, width: 24)
                   else
                     Icon(icon, color: color, size: 24),
                   const SizedBox(width: 12),
@@ -59,7 +62,9 @@ class SocialLoginButton extends StatelessWidget {
               )
             : Center(
                 child: imagePath != null
-                    ? Image.asset(imagePath!, height: 32, width: 32)
+                    ? imagePath!.endsWith('.svg')
+                        ? SvgPicture.asset(imagePath!, height: 32, width: 32)
+                        : Image.asset(imagePath!, height: 32, width: 32)
                     : Icon(icon, color: color, size: 32),
               ),
       ),
