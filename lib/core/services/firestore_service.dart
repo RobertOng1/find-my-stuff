@@ -172,6 +172,25 @@ class FirestoreService {
     }
   }
 
+  Future<void> acceptClaim({required String claimId, required String itemId}) async {
+    try {
+      final batch = _db.batch();
+
+      // 1. Update Claim Status
+      final claimRef = _db.collection('claims').doc(claimId);
+      batch.update(claimRef, {'status': 'ACCEPTED'});
+
+      // 2. Update Item Status (Lock it so it's hidden from feed)
+      final itemRef = _db.collection('posts').doc(itemId);
+      batch.update(itemRef, {'status': 'CLAIMED'});
+
+      await batch.commit();
+    } catch (e) {
+      print('Error accepting claim: $e');
+      rethrow;
+    }
+  }
+
   Future<void> updateClaimStatus(String claimId, String status, {String? reason}) async {
     try {
       final Map<String, dynamic> data = {'status': status};

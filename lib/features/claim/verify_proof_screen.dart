@@ -48,7 +48,12 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
   Future<void> _updateStatus(String status, {String? reason}) async {
     setState(() => _isLoading = true);
     try {
-      await _firestoreService.updateClaimStatus(widget.claim.id, status, reason: reason);
+      if (status == 'ACCEPTED') {
+        // Lock the item so no one else can claim it
+        await _firestoreService.acceptClaim(claimId: widget.claim.id, itemId: widget.item.id);
+      } else {
+        await _firestoreService.updateClaimStatus(widget.claim.id, status, reason: reason);
+      }
       
       if (mounted) {
         if (status == 'ACCEPTED') {

@@ -98,6 +98,9 @@ class NotificationService {
   void _handleForegroundMessage(RemoteMessage message) {
     final notification = message.notification;
     if (notification != null) {
+      // Encode data payload for local notification
+      final payload = Uri(queryParameters: message.data.map((key, value) => MapEntry(key, value.toString()))).query;
+      
       _localNotifications.show(
         notification.hashCode,
         notification.title,
@@ -117,15 +120,16 @@ class NotificationService {
             presentSound: true,
           ),
         ),
-        payload: message.data['route'] ?? '',
+        payload: payload,
       );
     }
   }
 
   void _handleMessageOpenedApp(RemoteMessage message) {
-    final route = message.data['route'];
-    if (route != null) {
-      _notificationStreamController.add(route);
+    // Standardize payload format -> simple URL query string for parsing ease
+    final payload = Uri(queryParameters: message.data.map((key, value) => MapEntry(key, value.toString()))).query;
+    if (payload.isNotEmpty) {
+      _notificationStreamController.add(payload);
     }
   }
 

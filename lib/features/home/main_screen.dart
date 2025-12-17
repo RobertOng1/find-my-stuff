@@ -44,6 +44,35 @@ class _MainScreenState extends State<MainScreen> {
     _setupClaimListener();    // Existing (Owner)
     _setupChatListener();     // NEW: Chat
     _setupMyClaimListener();  // NEW: Claimant (Accepted/Rejected)
+    
+    // UC-10: Listen for background/deep link notifications
+    NotificationService().notificationStream.listen((payload) {
+      if (payload.isNotEmpty && mounted) {
+        // Parse "route" or query string
+        // Format: "chatId=123&senderId=456&senderName=John"
+        final uri = Uri(query: payload);
+        final chatId = uri.queryParameters['chatId'];
+        final senderId = uri.queryParameters['senderId']; // Map to otherUserId
+        final senderName = uri.queryParameters['senderName']; // Map to otherUserName
+        final itemId = uri.queryParameters['itemId'];
+        final itemName = uri.queryParameters['itemName'];
+
+        if (chatId != null && senderId != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChatScreen(
+                chatId: chatId,
+                itemId: itemId ?? '',
+                itemName: itemName ?? 'Item',
+                otherUserId: senderId,
+                otherUserName: senderName ?? 'User',
+              ),
+            ),
+          );
+        }
+      }
+    });
   }
 
   @override
