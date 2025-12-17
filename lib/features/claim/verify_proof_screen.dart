@@ -24,6 +24,26 @@ class VerifyProofScreen extends StatefulWidget {
 class _VerifyProofScreenState extends State<VerifyProofScreen> {
   final _firestoreService = FirestoreService();
   bool _isLoading = false;
+  UserModel? _claimant;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchClaimant();
+  }
+
+  Future<void> _fetchClaimant() async {
+    try {
+      final user = await _firestoreService.getUser(widget.claim.claimantId);
+      if (mounted) {
+        setState(() {
+          _claimant = user;
+        });
+      }
+    } catch (e) {
+      print('Error fetching claimant: $e');
+    }
+  }
 
   Future<void> _updateStatus(String status, {String? reason}) async {
     setState(() => _isLoading = true);
@@ -229,22 +249,22 @@ class _VerifyProofScreenState extends State<VerifyProofScreen> {
                     children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundImage: _getImageProvider(widget.claim.claimantAvatar),
+                        backgroundImage: _getImageProvider(_claimant?.photoUrl ?? widget.claim.claimantAvatar),
                       ),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.claim.claimantName,
+                            _claimant?.displayName ?? widget.claim.claimantName,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: AppColors.textDark,
                             ),
                           ),
-                          const Text(
-                            'Claimant • 4.8★',
-                            style: TextStyle(color: AppColors.textGrey, fontSize: 12),
+                          Text(
+                            'Trust Score: ${_claimant?.trustScore.toStringAsFixed(1) ?? "0.0"} ★ | Points: ${_claimant?.points ?? 0}',
+                            style: const TextStyle(color: AppColors.textGrey, fontSize: 12),
                           ),
                         ],
                       ),

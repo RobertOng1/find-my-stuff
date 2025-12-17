@@ -110,7 +110,7 @@ class _MainScreenState extends State<MainScreen> {
         // Actually, typical chat apps watch the collection query.
         // For efficiency in this demo, let's watch the query. 
         .snapshots() 
-        .listen((snapshot) {
+        .listen((snapshot) async {
       for (final change in snapshot.docChanges) {
         // We only care about MODIFIED (new msg) or ADDED (new chat)
         if (change.type == DocumentChangeType.modified || change.type == DocumentChangeType.added) {
@@ -136,8 +136,26 @@ class _MainScreenState extends State<MainScreen> {
           final participants = List<String>.from(data['participants'] ?? []);
           final otherUserId = participants.firstWhere((id) => id != user.uid, orElse: () => '');
           
-          final senderName = data['lastSenderName'] ?? 'Someone';
-          final senderAvatar = data['lastSenderAvatar'] as String?;
+          String senderName = data['lastSenderName'] ?? '';
+          String? senderAvatar = data['lastSenderAvatar'] as String?;
+
+          // Fallback: If name is missing (legacy data), fetch it
+          if (senderName.isEmpty && lastSenderId != null) {
+            try {
+              final senderDoc = await FirebaseFirestore.instance.collection('users').doc(lastSenderId).get();
+              if (senderDoc.exists) {
+                final senderData = senderDoc.data();
+                if (senderData != null) {
+                  senderName = senderData['displayName'] ?? 'Someone';
+                  senderAvatar = senderData['photoUrl'];
+                }
+              }
+            } catch (e) {
+              print('Error fetching sender info: $e');
+            }
+          }
+          
+          if (senderName.isEmpty) senderName = 'Someone';
 
           if (mounted) {
              setState(() {
