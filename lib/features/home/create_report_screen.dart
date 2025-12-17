@@ -9,6 +9,7 @@ import '../../core/services/auth_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/models/models.dart';
 import '../../core/utils/ui_utils.dart';
+import '../../core/utils/image_picker_helper.dart'; // Added Helper
 import '../../widgets/animated_gradient_bg.dart';
 
 class AddReportScreen extends StatefulWidget {
@@ -28,7 +29,7 @@ class _AddReportScreenState extends State<AddReportScreen> {
   final _firestoreService = FirestoreService();
   final _authService = AuthService();
   final _storageService = StorageService();
-  final _imagePicker = ImagePicker();
+
   
   bool _isLoading = false;
   XFile? _imageFile; // Changed to XFile
@@ -51,15 +52,11 @@ class _AddReportScreenState extends State<AddReportScreen> {
   }
 
   Future<void> _pickImage() async {
-    try {
-      final XFile? pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-      if (pickedFile != null) {
-        setState(() {
-          _imageFile = pickedFile; // Directly assign XFile
-        });
-      }
-    } catch (e) {
-      UiUtils.showModernSnackBar(context, 'Error picking image: $e', isSuccess: false);
+    final pickedFile = await ImagePickerHelper.pickImage(context);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = pickedFile;
+      });
     }
   }
 

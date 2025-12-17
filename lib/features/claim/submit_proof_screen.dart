@@ -11,6 +11,7 @@ import '../../core/services/storage_service.dart'; // Added Storage Service
 import '../../core/models/models.dart';
 import '../../core/utils/ui_utils.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/utils/image_picker_helper.dart'; // Added Helper
 
 class ProofFormScreen extends StatefulWidget {
   final ItemModel item;
@@ -30,20 +31,16 @@ class _ProofFormScreenState extends State<ProofFormScreen> {
   final _proofDescriptionController = TextEditingController();
   final _firestoreService = FirestoreService();
   final _storageService = StorageService(); // Init Storage Service
-  final ImagePicker _picker = ImagePicker(); // Init Image Picker
+
   File? _selectedImage; // State for selected image
   bool _isLoading = false;
 
   Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.camera, imageQuality: 50);
-      if (image != null) {
-        setState(() {
-          _selectedImage = File(image.path);
-        });
-      }
-    } catch (e) {
-      UiUtils.showModernSnackBar(context, 'Error picking image: $e', isSuccess: false);
+    final pickedFile = await ImagePickerHelper.pickImage(context, imageQuality: 50);
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
     }
   }
 
