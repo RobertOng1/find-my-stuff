@@ -96,8 +96,9 @@ class ChatService {
   Future<void> sendMessage({
     required String chatId,
     required String senderId,
-    required String senderName,   // NEW
-    required String senderAvatar, // NEW
+    required String receiverId, // NEW: Needed to increment unread count
+    required String senderName,   
+    required String senderAvatar, 
     String? text,
     String? audioUrl,
     String? duration,
@@ -121,13 +122,20 @@ class ChatService {
       // Update parent chat document
       String previewText = audioUrl != null ? '🎤 Voice Message' : (text ?? '');
 
-      transaction.update(chatDoc, {
+      final Map<String, dynamic> updates = {
         'lastMessage': previewText,
         'lastMessageTime': FieldValue.serverTimestamp(),
         'lastSenderId': senderId, 
-        'lastSenderName': senderName, // Track name for notifications
-        'lastSenderAvatar': senderAvatar, // Track avatar for notifications
-      });
+        'lastSenderName': senderName, 
+        'lastSenderAvatar': senderAvatar, 
+      };
+
+      // Increment unread count for the RECEIVER
+      if (receiverId.isNotEmpty) {
+        updates['unreadCounts.$receiverId'] = FieldValue.increment(1);
+      }
+
+      transaction.update(chatDoc, updates);
     });
   }
 
@@ -148,5 +156,12 @@ class ChatService {
         .where('participants', arrayContains: userId)
         .orderBy('lastMessageTime', descending: true)
         .snapshots();
+  }
+  // Mark chat as read
+  Future<void> markChatAsRead(String chatId, String userId) async {
+    await _firestore.collection('chats').doc(chatId).update({
+      'lastRead.$userId': FieldValue.serverTimestamp(),
+      'unreadCounts.$userId': 0, // Reset counter
+    });
   }
 }

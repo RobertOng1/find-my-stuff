@@ -172,6 +172,33 @@ class _ChatListItem extends StatelessWidget {
           timeStr = '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
         }
 
+        // Calculate Unread Status
+        int unreadCount = 0;
+        final String lastSenderId = chatData['lastSenderId'] ?? '';
+        
+        // Use the explicit counter if available (New logic)
+        final Map<String, dynamic> unreadCounts = Map<String, dynamic>.from(chatData['unreadCounts'] ?? {});
+        unreadCount = (unreadCounts[currentUserId] ?? 0) as int;
+
+        // Fallback for legacy chats (timestamp check)
+        // If counter is 0 but timestamp says unread, show as 1 unread
+        if (unreadCount == 0) {
+            final Map<String, dynamic> lastReadMap = Map<String, dynamic>.from(chatData['lastRead'] ?? {});
+            final Timestamp? myLastRead = lastReadMap[currentUserId] as Timestamp?;
+            
+            if (lastSenderId != currentUserId && lastMessageTime != null) {
+              if (myLastRead == null) {
+                unreadCount = 1; // Never read
+              } else {
+                 final msgTime = lastMessageTime.toDate();
+                 final readTime = myLastRead.toDate();
+                 if (msgTime.isAfter(readTime)) {
+                   unreadCount = 1; // Unread by timestamp
+                 }
+              }
+            }
+        }
+
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
@@ -191,8 +218,8 @@ class _ChatListItem extends StatelessWidget {
             avatarUrl: otherUser.photoUrl.isNotEmpty ? otherUser.photoUrl : 'assets/images/logo.png',
             lastMessage: chatData['lastMessage'] ?? '',
             time: timeStr,
-            unreadCount: 0, // Logic for unread count requires tracking read status
-            isOnline: false, // Online status requires Presence system
+            unreadCount: unreadCount, 
+            isOnline: false, 
             onTap: () {
               Navigator.push(
                 context,

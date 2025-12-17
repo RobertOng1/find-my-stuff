@@ -26,6 +26,10 @@ class _MainScreenState extends State<MainScreen> {
   StreamSubscription? _claimSubscription; 
   final Set<String> _notifiedClaimIds = {}; 
 
+  // Badge State
+  bool _hasUnreadMessages = false;
+  bool _hasUnreadStatus = false; 
+
   final List<Widget> _screens = [
     const HomeScreen(),        // Dashboard
     const StatusScreen(),      // Status
@@ -81,6 +85,11 @@ class _MainScreenState extends State<MainScreen> {
           // Only notify for claims we haven't seen yet
           if (!_notifiedClaimIds.contains(claimId)) {
             _notifiedClaimIds.add(claimId);
+             
+            if (mounted) setState(() {
+               if (_selectedIndex != 1) _hasUnreadStatus = true;
+            });
+
             _showClaimNotification(data);
           }
         }
@@ -131,6 +140,12 @@ class _MainScreenState extends State<MainScreen> {
           final senderAvatar = data['lastSenderAvatar'] as String?;
 
           if (mounted) {
+             setState(() {
+               if (_selectedIndex != 3) {
+                 _hasUnreadMessages = true;
+               }
+             });
+             
              InAppNotification.show(
               context,
               title: senderName, // Show dynamic name
@@ -192,12 +207,18 @@ class _MainScreenState extends State<MainScreen> {
 
           final status = data['status'];
           if (status == 'ACCEPTED') {
+            if (mounted) setState(() {
+               if (_selectedIndex != 1) _hasUnreadStatus = true;
+            });
             _showMyClaimUpdateNotification(
               title: 'Claim Accepted! 🎉', 
               body: 'The owner verified your claim. Tap to coordinate handover.',
               isPositive: true
             );
           } else if (status == 'REJECTED') {
+            if (mounted) setState(() {
+               if (_selectedIndex != 1) _hasUnreadStatus = true;
+            });
             _showMyClaimUpdateNotification(
               title: 'Claim Rejected',
               body: 'Reason: ${data['rejectionReason'] ?? 'Details not provided'}',
@@ -255,6 +276,9 @@ class _MainScreenState extends State<MainScreen> {
     if (index == 2) return;
     setState(() {
       _selectedIndex = index;
+      // Clear badges on tap
+      if (index == 1) _hasUnreadStatus = false;
+      if (index == 3) _hasUnreadMessages = false;
     });
   }
 
@@ -442,6 +466,9 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _buildNavItem(IconData icon, IconData activeIcon, String label, int index) {
     final isSelected = _selectedIndex == index;
+    bool showBadge = false;
+    if (index == 1 && _hasUnreadStatus) showBadge = true;
+    if (index == 3 && _hasUnreadMessages) showBadge = true;
     
     return GestureDetector(
       onTap: () => _onItemTapped(index),
@@ -452,18 +479,44 @@ class _MainScreenState extends State<MainScreen> {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.all(isSelected ? 10 : 0), // Slightly adjusted padding
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : Colors.transparent,
-                borderRadius: BorderRadius.circular(16), // Softer radius
-              ),
-              child: Icon(
-                isSelected ? activeIcon : icon,
-                color: isSelected ? AppColors.primaryBlue : AppColors.textGrey,
-                size: 24,
-              ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: EdgeInsets.all(isSelected ? 10 : 0), // Slightly adjusted padding
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(16), // Softer radius
+                  ),
+                  child: Icon(
+                    isSelected ? activeIcon : icon,
+                    color: isSelected ? AppColors.primaryBlue : AppColors.textGrey,
+                    size: 24,
+                  ),
+                ),
+                if (showBadge)
+                  Positioned(
+                    top: -2,
+                    right: -2,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: AppColors.errorRed,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
             if (isSelected) const SizedBox(height: 4),
             if (isSelected)

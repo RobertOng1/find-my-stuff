@@ -80,6 +80,9 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     _checkForPendingClaims();
     _messagesStream = _chatService.getMessages(widget.chatId);
+    
+    // Mark as read immediately
+    _chatService.markChatAsRead(widget.chatId, currentUserId);
   }
 
   @override
@@ -266,6 +269,7 @@ class _ChatScreenState extends State<ChatScreen> {
        await _chatService.sendMessage(
          chatId: widget.chatId, 
          senderId: currentUserId, 
+         receiverId: widget.otherUserId, // Add missing parameter
          senderName: _authService.currentUser?.displayName ?? 'User',
          senderAvatar: _authService.currentUser?.photoURL ?? '',
          audioUrl: audioUrl,
@@ -291,6 +295,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _chatService.sendMessage(
       chatId: widget.chatId,
       senderId: currentUserId,
+      receiverId: widget.otherUserId, // Pass receiver ID 
       senderName: _authService.currentUser?.displayName ?? 'User',
       senderAvatar: _authService.currentUser?.photoURL ?? '',
       text: _messageController.text.trim(),
