@@ -34,7 +34,7 @@ class BadgesScreen extends StatelessWidget {
           crossAxisCount: 2,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: 0.9,
+          childAspectRatio: 0.75, // Adjusted to prevent overflow
         ),
         itemCount: BadgeConstants.allBadges.length,
         itemBuilder: (context, index) {

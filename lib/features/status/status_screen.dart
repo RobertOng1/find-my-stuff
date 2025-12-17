@@ -209,7 +209,7 @@ class _StatusScreenState extends State<StatusScreen> {
                             ),
                             alignment: Alignment.center,
                             child: Text(
-                              'Reported Items',
+                              'My Posts',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: !_isClaimedTabActive 
@@ -245,7 +245,7 @@ class _StatusScreenState extends State<StatusScreen> {
                             ),
                             alignment: Alignment.center,
                             child: Text(
-                              'Claimed Items',
+                              'My Activity',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: _isClaimedTabActive 
@@ -293,7 +293,7 @@ class _StatusScreenState extends State<StatusScreen> {
 
         final items = snapshot.data ?? [];
         if (items.isEmpty) {
-          return _buildEmptyState('No reported items');
+          return _buildEmptyState('No posts yet');
         }
 
         return ListView.builder(
@@ -370,7 +370,7 @@ class _StatusScreenState extends State<StatusScreen> {
 
         final claims = snapshot.data ?? [];
         if (claims.isEmpty) {
-          return _buildEmptyState('No claimed items');
+          return _buildEmptyState('No activity yet');
         }
 
         return ListView.builder(
@@ -388,21 +388,26 @@ class _StatusScreenState extends State<StatusScreen> {
                 String displayStatus = '';
                 String statusType = '';
 
+                // Determine context: Am I the Finder or the Owner?
+                // If item is LOST, I am the Finder (I clicked "I Found It").
+                // If item is FOUND, I am the Owner (I clicked "Claim").
+                final isFinderContext = item.type == 'LOST';
+
                 switch (claim.status) {
                   case 'PENDING':
-                    displayStatus = 'Pending Verification';
+                    displayStatus = isFinderContext ? 'Verification Pending' : 'Claim Pending';
                     statusType = 'pending';
                     break;
                   case 'ACCEPTED':
-                     displayStatus = 'Status Accepted';
+                     displayStatus = isFinderContext ? 'Found by You' : 'Claim Accepted';
                      statusType = 'accepted';
                      break;
                   case 'COMPLETED':
-                     displayStatus = 'Handover Complete';
+                     displayStatus = isFinderContext ? 'Returned by You' : 'Handover Complete';
                      statusType = 'done';
                      break;
                   case 'REJECTED':
-                     displayStatus = 'Status Rejected';
+                     displayStatus = isFinderContext ? 'Report Rejected' : 'Claim Rejected';
                      statusType = 'rejected';
                      break;
                   default:

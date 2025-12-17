@@ -45,6 +45,11 @@ class StatusItemCard extends StatelessWidget {
           buttonLabel = 'Claimed';
           buttonColor = AppColors.primaryBlue;
           break;
+        case 'done':
+          statusColor = AppColors.successGreen;
+          buttonLabel = 'Success';
+          buttonColor = AppColors.primaryBlue;
+          break;
         case 'pending':
         default:
           statusColor = Colors.orange;
