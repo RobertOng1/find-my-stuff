@@ -49,5 +49,3 @@ It connects people who lose their belongings with those who find them, making it
 - `android.permission.CAMERA`: Required when user chooses to capture image when submitting report.
 - `android.permission.READ_EXTERNAL_STORAGE` / `READ_MEDIA_IMAGES` (Android 13+): Required when user chooses to upload existing image when submitting report.
 - `android.permission.RECORD_AUDIO`: Required when user wants to send voice message.
-
-P.S. Development is ongoing. We will be pushing updates regularly. Stay tuned!
