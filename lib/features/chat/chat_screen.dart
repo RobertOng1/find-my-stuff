@@ -250,29 +250,19 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _uploadAndSendAudio(String path) async {
     try {
        final file = File(path);
-       if (!await file.exists()) {
-         print('Error: File does not exist at path: $path');
-         return;
-       }
+       if (!await file.exists()) return;
        
-       final length = await file.length();
-       print('DEBUG: Audio File Size: $length bytes');
-       
-       if (length < 500) { // arbitrary small size check (header only?)
-         print('Warning: Audio file too small ($length bytes), might be empty.');
-         // return; // Let's try sending anyway, but log it.
-       }
-
-       final audioUrl = await _chatService.uploadAudio(file, widget.chatId);
+       // Process locally
+       final base64Audio = await _chatService.processAudio(file);
        final durationStr = _formatDuration(_recordDurationSeconds);
 
        await _chatService.sendMessage(
          chatId: widget.chatId, 
          senderId: currentUserId, 
-         receiverId: widget.otherUserId, // Add missing parameter
+         receiverId: widget.otherUserId, 
          senderName: _authService.currentUser?.displayName ?? 'User',
          senderAvatar: _authService.currentUser?.photoURL ?? '',
-         audioUrl: audioUrl,
+         audioBase64: base64Audio, 
          duration: durationStr
        );
     } catch (e) {
@@ -291,6 +281,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
+    
+    print('DEBUG: Sending Message to ${widget.otherUserId} from $currentUserId');
     
     _chatService.sendMessage(
       chatId: widget.chatId,
@@ -676,7 +668,12 @@ class _ChatScreenState extends State<ChatScreen> {
                     ],
                   ),
                   child: audioUrl != null
-                      ? _AudioMessage(audioUrl: audioUrl, duration: duration ?? '0:00', isMe: isMe)
+                      ? _AudioMessage(
+                          audioUrl: audioUrl, 
+                          duration: duration ?? '0:00', 
+                          isMe: isMe,
+                          chatId: widget.chatId
+                        )
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -719,11 +716,13 @@ class _AudioMessage extends StatefulWidget {
   final String audioUrl;
   final String duration; 
   final bool isMe;
+  final String chatId;
 
   const _AudioMessage({
     required this.audioUrl,
     required this.duration,
     required this.isMe,
+    required this.chatId,
   });
 
   @override
@@ -733,6 +732,7 @@ class _AudioMessage extends StatefulWidget {
 class _AudioMessageState extends State<_AudioMessage> {
   final AudioPlayer _player = AudioPlayer();
   bool _isPlaying = false;
+  Uint8List? _cachedBytes;
   
   @override
   void initState() {
@@ -757,17 +757,32 @@ class _AudioMessageState extends State<_AudioMessage> {
       await _player.pause();
     } else {
       Source source;
-      if (widget.audioUrl.startsWith('http')) {
-        source = UrlSource(widget.audioUrl);
-      } else {
-        try {
-          source = BytesSource(base64Decode(widget.audioUrl));
-        } catch (e) {
-          print('Error decoding audio base64: $e');
-          return;
+      try {
+        if (widget.audioUrl.startsWith('http')) {
+          source = UrlSource(widget.audioUrl);
+        } else if (widget.audioUrl.startsWith('internal:')) {
+           // Fetch Chunk
+           if (_cachedBytes == null) {
+              final msgId = widget.audioUrl.split(':')[1];
+              final doc = await FirebaseFirestore.instance
+                  .collection('chats').doc(widget.chatId)
+                  .collection('audio_chunks').doc(msgId)
+                  .get();
+              
+              if (!doc.exists || doc.data() == null) throw 'Audio chunk not found';
+              final base64Str = doc.data()!['base64'] as String;
+              _cachedBytes = base64Decode(base64Str);
+           }
+           source = BytesSource(_cachedBytes!);
+        } else {
+           // Legacy Base64
+           source = BytesSource(base64Decode(widget.audioUrl));
         }
+        await _player.play(source);
+      } catch (e) {
+        print('Error playing audio: $e');
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cannot play audio')));
       }
-      await _player.play(source);
     }
   }
 

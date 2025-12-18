@@ -270,6 +270,19 @@ class FirestoreService {
     }
   }
 
+  Stream<int> getUserItemCountStream(String userId, String type, {String? status}) {
+    Query query = _db
+        .collection('posts')
+        .where('userId', isEqualTo: userId)
+        .where('type', isEqualTo: type);
+    
+    if (status != null) {
+      query = query.where('status', isEqualTo: status);
+    }
+
+    return query.snapshots().map((snapshot) => snapshot.size);
+  }
+
   Stream<List<ItemModel>> getUserActiveItems(String userId) {
     return _db
         .collection('posts')

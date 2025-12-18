@@ -73,19 +73,15 @@ class ChatService {
     return chatId;
   }
 
-  // Encode Audio to Base64 (Bypassing Storage)
-  Future<String> uploadAudio(File audioFile, String chatId) async {
+  // Encode Audio to Base64 (Helper)
+  Future<String> processAudio(File audioFile) async {
     print('DEBUG: Converting audio to Base64...');
     try {
       final bytes = await audioFile.readAsBytes();
-      // Check size limit (approx 1MB for Firestore document less overhead)
-      if (bytes.length > 700000) { // Safety buffer for metadata (700KB)
-         throw 'Audio too long (limit > 1 min). Please record a shorter message.';
+      if (bytes.length > 700000) {
+         throw 'Audio too long (> 1 min).';
       }
-      
-      final base64String = base64Encode(bytes);
-      print('DEBUG: Encoded Audio length: ${base64String.length}');
-      return base64String;
+      return base64Encode(bytes);
     } catch (e) {
       print('Error encoding audio: $e');
       throw e;
@@ -96,31 +92,38 @@ class ChatService {
   Future<void> sendMessage({
     required String chatId,
     required String senderId,
-    required String receiverId, // NEW: Needed to increment unread count
+    required String receiverId,
     required String senderName,   
     required String senderAvatar, 
     String? text,
-    String? audioUrl,
+    String? audioBase64, 
     String? duration,
   }) async {
-    if ((text == null || text.trim().isEmpty) && audioUrl == null) return;
+    if ((text == null || text.trim().isEmpty) && audioBase64 == null) return;
 
     final DocumentReference chatDoc = _firestore.collection('chats').doc(chatId);
     final CollectionReference messagesCol = chatDoc.collection('messages');
+    final String messageId = messagesCol.doc().id; 
 
     await _firestore.runTransaction((transaction) async {
-      // Add message to sub-collection
-      transaction.set(messagesCol.doc(), {
+       String? finalAudioUrl;
+       
+       if (audioBase64 != null) {
+          final chunkRef = chatDoc.collection('audio_chunks').doc(messageId);
+          transaction.set(chunkRef, {'base64': audioBase64});
+          finalAudioUrl = 'internal:$messageId';
+       }
+
+      transaction.set(messagesCol.doc(messageId), {
         'text': text ?? '',
-        'audioUrl': audioUrl,
+        'audioUrl': finalAudioUrl,
         'duration': duration,
-        'isAudio': audioUrl != null,
+        'isAudio': audioBase64 != null,
         'senderId': senderId,
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Update parent chat document
-      String previewText = audioUrl != null ? '🎤 Voice Message' : (text ?? '');
+      String previewText = audioBase64 != null ? '🎤 Voice Message' : (text ?? '');
 
       final Map<String, dynamic> updates = {
         'lastMessage': previewText,
@@ -128,12 +131,8 @@ class ChatService {
         'lastSenderId': senderId, 
         'lastSenderName': senderName, 
         'lastSenderAvatar': senderAvatar, 
+        'unreadCounts.$receiverId': FieldValue.increment(1),
       };
-
-      // Increment unread count for the RECEIVER
-      if (receiverId.isNotEmpty) {
-        updates['unreadCounts.$receiverId'] = FieldValue.increment(1);
-      }
 
       transaction.update(chatDoc, updates);
     });

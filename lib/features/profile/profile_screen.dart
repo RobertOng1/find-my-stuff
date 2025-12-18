@@ -233,11 +233,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Row(
           children: [
-            _buildGlassStatCard(_lostCount.toString(), 'Lost Item', const Color(0xFFFFA000)),
+            _buildGlassStatCard(
+                _currentUser != null ? _firestoreService.getUserItemCountStream(_currentUser!.uid, 'LOST') : null, 
+                'Lost Item', 
+                const Color(0xFFFFA000)
+            ),
             const SizedBox(width: 12),
-            _buildGlassStatCard(_foundCount.toString(), 'Found Item', AppColors.successGreen),
+            _buildGlassStatCard(
+                _currentUser != null ? _firestoreService.getUserItemCountStream(_currentUser!.uid, 'FOUND') : null, 
+                'Found Item', 
+                AppColors.successGreen
+            ),
             const SizedBox(width: 12),
-            _buildGlassStatCard(_returnedCount.toString(), 'Returned', AppColors.primaryBlue),
+            _buildGlassStatCard(
+                 _currentUser != null ? _firestoreService.getUserItemCountStream(_currentUser!.uid, 'FOUND', status: 'RESOLVED') : null, 
+                'Returned', 
+                AppColors.primaryBlue
+            ),
           ],
         ),
       ),
@@ -381,7 +393,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildGlassStatCard(String count, String label, Color accentColor) {
+  Widget _buildGlassStatCard(Stream<int>? stream, String label, Color accentColor) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -397,27 +409,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
           border: Border.all(color: accentColor.withOpacity(0.2)),
         ),
-        child: Column(
-          children: [
-            Text(
-              count,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: accentColor,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textGrey,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: StreamBuilder<int>(
+          stream: stream,
+          builder: (context, snapshot) {
+            final count = snapshot.data?.toString() ?? '-';
+            return Column(
+              children: [
+                Text(
+                  count,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: accentColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textGrey,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            );
+          }
         ),
       ),
     );

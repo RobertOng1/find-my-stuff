@@ -153,11 +153,11 @@ class _MainScreenState extends State<MainScreen> {
           if (lastSenderId == user.uid) continue;
 
           // 2. Don't notify if message is old (stale data on init)
-          // Simple check: if message is older than 30 seconds, ignore.
+          // Relaxed check: 5 minutes to allow for network/upload lag
           if (lastMessageTime != null) {
             final now = DateTime.now();
             final msgTime = lastMessageTime.toDate();
-            if (now.difference(msgTime).inSeconds > 30) continue;
+            if (now.difference(msgTime).inSeconds > 300) continue;
           }
 
           // 3. Show Notification
